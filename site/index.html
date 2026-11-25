@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI News</title>
+  <meta name="description" content="Новости IT и ИИ: модели, инструменты, наука, безопасность — и база знаний.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234f46e5'/><text x='16' y='22' font-size='16' font-family='sans-serif' font-weight='700' text-anchor='middle' fill='white'>AI</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap top-row">
+      <a class="brand" href="#feed"><span class="logo">AI</span> News</a>
+      <div class="top-meta">
+        <span id="updated" class="muted"></span>
+        <button id="theme-toggle" class="icon-btn" type="button" title="Сменить тему" aria-label="Сменить тему">◐</button>
+      </div>
+    </div>
+    <nav class="wrap tabs" id="tabs" aria-label="Разделы">
+      <a href="#feed" data-tab="feed">Лента</a>
+      <a href="#models" data-tab="models">Модели ИИ</a>
+      <a href="#tools" data-tab="tools">Инструменты</a>
+      <a href="#science" data-tab="science">Наука</a>
+      <a href="#it" data-tab="it">IT и безопасность</a>
+      <a href="#saved" data-tab="saved">Избранное</a>
+      <a href="#kb" data-tab="kb">База знаний</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <!-- Новости -->
+    <section id="news-view">
+      <div class="filters">
+        <input id="q" type="search" placeholder="Поиск по заголовкам и описаниям…" autocomplete="off">
+        <select id="period" aria-label="Период">
+          <option value="1">24 часа</option>
+          <option value="3">3 дня</option>
+          <option value="7" selected>Неделя</option>
+          <option value="30">Месяц</option>
+          <option value="0">Всё время</option>
+        </select>
+        <select id="source" aria-label="Источник"><option value="">Все источники</option></select>
+        <label class="check"><input type="checkbox" id="only-new"> только новое</label>
+      </div>
+      <div id="tag-bar" class="tag-bar"></div>
+      <p id="count" class="muted small"></p>
+      <ol id="list" class="list"></ol>
+      <button id="more" class="more" type="button" hidden>Показать ещё</button>
+    </section>
+
+    <!-- База знаний -->
+    <section id="kb-view" hidden>
+      <div class="filters">
+        <input id="kb-q" type="search" placeholder="Поиск по базе знаний…" autocomplete="off">
+      </div>
+      <div id="kb-sections" class="tag-bar"></div>
+      <p id="kb-note" class="muted small"></p>
+      <div id="kb-list" class="kb-grid"></div>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    <details id="sources-status">
+      <summary>Источники</summary>
+      <ul id="sources-list"></ul>
+    </details>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

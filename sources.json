@@ -1,0 +1,37 @@
+{
+  "_comment": "Список источников. category: models | tools | science | it. max_items — сколько последних записей брать за один прогон.",
+  "sources": [
+    { "id": "openai",       "name": "OpenAI News",        "category": "models",  "url": "https://openai.com/news/rss.xml" },
+    { "id": "anthropic",    "name": "Anthropic News",     "category": "models",  "url": "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml" },
+    { "id": "deepmind",     "name": "Google DeepMind",    "category": "models",  "url": "https://deepmind.google/blog/rss.xml" },
+    { "id": "googleai",     "name": "Google AI Blog",     "category": "models",  "url": "https://blog.google/technology/ai/rss/" },
+    { "id": "hf-blog",      "name": "Hugging Face Blog",  "category": "models",  "url": "https://huggingface.co/blog/feed.xml" },
+    { "id": "nvidia",       "name": "NVIDIA Blog",        "category": "models",  "url": "https://blogs.nvidia.com/feed/", "max_items": 15 },
+    { "id": "verge-ai",     "name": "The Verge — AI",     "category": "models",  "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml" },
+    { "id": "techcrunch-ai","name": "TechCrunch — AI",    "category": "models",  "url": "https://techcrunch.com/category/artificial-intelligence/feed/" },
+    { "id": "willison",     "name": "Simon Willison",     "category": "models",  "url": "https://simonwillison.net/atom/everything/", "max_items": 20 },
+    { "id": "habr-ai",      "name": "Хабр — ИИ",          "category": "models",  "url": "https://habr.com/ru/rss/hubs/artificial_intelligence/articles/?fl=ru" },
+
+    { "id": "gh-claude-code","name": "Claude Code (релизы)","category": "tools", "url": "https://github.com/anthropics/claude-code/releases.atom", "max_items": 10 },
+    { "id": "gh-codex",     "name": "OpenAI Codex CLI (релизы)", "category": "tools", "url": "https://github.com/openai/codex/releases.atom", "max_items": 10 },
+    { "id": "gh-ollama",    "name": "Ollama (релизы)",    "category": "tools",   "url": "https://github.com/ollama/ollama/releases.atom", "max_items": 10 },
+    { "id": "gh-vllm",      "name": "vLLM (релизы)",      "category": "tools",   "url": "https://github.com/vllm-project/vllm/releases.atom", "max_items": 10 },
+    { "id": "gh-transformers","name": "HF Transformers (релизы)", "category": "tools", "url": "https://github.com/huggingface/transformers/releases.atom", "max_items": 10 },
+    { "id": "gh-langchain", "name": "LangChain (релизы)", "category": "tools",   "url": "https://github.com/langchain-ai/langchain/releases.atom", "max_items": 10 },
+    { "id": "gh-vscode",    "name": "VS Code (релизы)",   "category": "tools",   "url": "https://github.com/microsoft/vscode/releases.atom", "max_items": 5 },
+    { "id": "github-blog",  "name": "GitHub Blog",        "category": "tools",   "url": "https://github.blog/feed/" },
+    { "id": "habr-dev",     "name": "Хабр — лучшее за день", "category": "tools", "url": "https://habr.com/ru/rss/articles/top/daily/?fl=ru" },
+
+    { "id": "arxiv-ai",     "name": "arXiv cs.AI",        "category": "science", "url": "https://rss.arxiv.org/rss/cs.AI", "max_items": 30 },
+    { "id": "arxiv-cl",     "name": "arXiv cs.CL",        "category": "science", "url": "https://rss.arxiv.org/rss/cs.CL", "max_items": 30 },
+    { "id": "arxiv-lg",     "name": "arXiv cs.LG",        "category": "science", "url": "https://rss.arxiv.org/rss/cs.LG", "max_items": 30 },
+    { "id": "google-research","name": "Google Research",  "category": "science", "url": "https://research.google/blog/rss/" },
+    { "id": "bair",         "name": "Berkeley AI Research","category": "science","url": "https://bair.berkeley.edu/blog/feed.xml" },
+
+    { "id": "hn",           "name": "Hacker News (200+)", "category": "it",      "url": "https://hnrss.org/frontpage?points=200", "max_items": 30 },
+    { "id": "ars",          "name": "Ars Technica",       "category": "it",      "url": "https://feeds.arstechnica.com/arstechnica/technology-lab" },
+    { "id": "thehackernews","name": "The Hacker News (security)", "category": "it", "url": "https://feeds.feedburner.com/TheHackersNews" },
+    { "id": "bleeping",     "name": "BleepingComputer",   "category": "it",      "url": "https://www.bleepingcomputer.com/feed/" },
+    { "id": "krebs",        "name": "Krebs on Security",  "category": "it",      "url": "https://krebsonsecurity.com/feed/" }
+  ]
+}
