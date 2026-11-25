@@ -26,7 +26,7 @@
   const state = {
     tab: "feed", items: [], sources: {}, kb: null,
     q: "", period: 7, source: "", onlyNew: false, tag: "", shown: PAGE,
-    kbQ: "", kbSection: "",
+    kbQ: "", kbSection: "", digestDays: 1,
     // Избранное хранит копии записей: так они не пропадут, когда выпадут из ленты (хранится 45 дней).
     saved: new Map(Object.entries(store.get("savedItems", {}))),
   };
@@ -50,12 +50,13 @@
 
   // ---- Вкладки ----
   function setTab(tab) {
-    if (!["feed", "saved", "kb", ...Object.keys(CATS)].includes(tab)) tab = "feed";
+    if (!["feed", "digest", "saved", "kb", ...Object.keys(CATS)].includes(tab)) tab = "feed";
     state.tab = tab; state.shown = PAGE; state.tag = "";
     document.querySelectorAll("#tabs a").forEach((a) => a.classList.toggle("active", a.dataset.tab === tab));
-    $("news-view").hidden = tab === "kb";
+    $("news-view").hidden = tab === "kb" || tab === "digest";
     $("kb-view").hidden = tab !== "kb";
-    if (tab === "kb") renderKb(); else { fillSources(); renderNews(); }
+    $("digest-view").hidden = tab !== "digest";
+    if (tab === "kb") renderKb(); else if (tab === "digest") renderDigest(); else { fillSources(); renderNews(); }
   }
   window.addEventListener("hashchange", () => setTab(location.hash.slice(1)));
 
@@ -94,7 +95,40 @@
       `<button class="chip${t === state.tag ? " on" : ""}" data-tag="${esc(t)}" type="button">${esc(t)} <span class="muted">${n}</span></button>`).join("");
   }
 
-  function card(it) {
+  // ---- Склейка дублей: записи с общим group показываем одной карточкой ----
+  const weight = (it) => (state.sources[it.source] || {}).weight || 1;
+  // Главная запись сюжета: самый важный источник, при равенстве — кто написал первым.
+  const mainFirst = (a, b) => weight(b) - weight(a) || (a.published < b.published ? -1 : 1);
+  function groupItems(list) {
+    const byKey = new Map();
+    const out = [];
+    for (const it of list) {
+      const key = it.group || it.id;
+      let g = byKey.get(key);
+      if (!g) { g = { items: [] }; byKey.set(key, g); out.push(g); }
+      g.items.push(it);
+    }
+    for (const g of out) {
+      g.items.sort(mainFirst);
+      g.main = g.items[0];
+      g.others = g.items.slice(1);
+      // Ленты одного сайта (два раздела Хабра, блоги Google) считаем одним источником.
+      g.nSources = new Set(g.items.map((x) => (state.sources[x.source] || {}).family || x.source)).size;
+    }
+    // Сюжет стоит в ленте по дате главной записи — той, чьё время показано на карточке.
+    out.sort((a, b) => (a.main.published < b.main.published ? 1 : -1));
+    return out;
+  }
+  const srcName = (it) => (state.sources[it.source] || {}).name || it.source;
+  const plural = (n, one, few, many) => {
+    const m10 = n % 10, m100 = n % 100;
+    return m10 === 1 && m100 !== 11 ? one : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? few : many;
+  };
+
+  function card(g) {
+    const it = g.main;
+    const others = g.others || [];
+    const fresh = isNew(it) || others.some(isNew);
     const src = state.sources[it.source];
     return `<li class="card" data-cat="${esc(it.category)}">
       <div class="row">
@@ -102,10 +136,13 @@
           <div class="meta">
             <span class="src">${esc(src ? src.name : it.source)}</span>
             <time datetime="${esc(it.published)}" title="${esc(new Date(it.published).toLocaleString("ru"))}">${esc(ago(it.published))}</time>
-            ${isNew(it) ? `<span class="badge-new">новое</span>` : ""}
+            ${g.nSources > 1 ? `<span class="badge-hot" title="Об этом пишут несколько источников">${g.nSources} ${plural(g.nSources, "источник", "источника", "источников")}</span>` : ""}
+            ${fresh ? `<span class="badge-new">новое</span>` : ""}
           </div>
           <h3><a href="${esc(safeUrl(it.link))}" target="_blank" rel="noopener noreferrer">${esc(it.title)}</a></h3>
           ${it.summary ? `<p>${esc(it.summary)}</p>` : ""}
+          ${others.length ? `<div class="also">Также: ${others.map((o) =>
+            `<a href="${esc(safeUrl(o.link))}" target="_blank" rel="noopener noreferrer" title="${esc(o.title)}">${esc(srcName(o))}</a>`).join(", ")}</div>` : ""}
           ${it.tags.length ? `<div class="tags">${it.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>` : ""}
         </div>
         <button class="star${state.saved.has(it.id) ? " on" : ""}" data-star="${esc(it.id)}" type="button"
@@ -119,12 +156,15 @@
     if (state.tag && !base.some((it) => it.tags.includes(state.tag))) state.tag = "";
     renderTags(base);
     const list = state.tag ? base.filter((it) => it.tags.includes(state.tag)) : base;
-    const newN = list.filter(isNew).length;
-    $("count").textContent = `${list.length} записей` + (newN && !state.onlyNew ? ` · ${newN} новых с прошлого визита` : "");
-    $("list").innerHTML = list.length
-      ? list.slice(0, state.shown).map(card).join("")
+    const groups = state.tab === "saved" ? list.map((it) => ({ main: it, items: [it], others: [], nSources: 1 })) : groupItems(list);
+    const newN = groups.filter((g) => g.items.some(isNew)).length;
+    const merged = list.length - groups.length;
+    $("count").textContent = `${groups.length} записей` + (merged ? ` · склеено дублей: ${merged}` : "") +
+      (newN && !state.onlyNew ? ` · ${newN} новых с прошлого визита` : "");
+    $("list").innerHTML = groups.length
+      ? groups.slice(0, state.shown).map(card).join("")
       : `<li class="empty">${state.tab === "saved" ? "Пока пусто — отмечайте новости звёздочкой ☆" : "Ничего не найдено. Попробуйте расширить период или сбросить фильтры."}</li>`;
-    $("more").hidden = list.length <= state.shown;
+    $("more").hidden = groups.length <= state.shown;
     $("period").disabled = state.tab === "saved";
   }
 
@@ -137,13 +177,72 @@
     const b = e.target.closest("[data-tag]"); if (!b) return;
     state.tag = state.tag === b.dataset.tag ? "" : b.dataset.tag; state.shown = PAGE; renderNews();
   });
-  $("list").addEventListener("click", (e) => {
+  function onStar(e) {
     const b = e.target.closest("[data-star]"); if (!b) return;
     const id = b.dataset.star;
     if (state.saved.has(id)) state.saved.delete(id);
     else { const it = state.items.find((x) => x.id === id); if (it) state.saved.set(id, it); }
     store.set("savedItems", Object.fromEntries(state.saved));
-    renderNews();
+    if (state.tab === "digest") renderDigest(); else renderNews();
+  }
+  $("list").addEventListener("click", onStar);
+  $("digest-list").addEventListener("click", onStar);
+
+  // ---- Дайджест: топ сюжетов по темам, без ИИ ----
+  // Важность: сколько источников пишут + вес источника + теги. При равенстве — свежее выше.
+  const TAG_SCORE = { "релиз": 2, "безопасность": 2, "модель": 1, "баг/сбой": 1, "open source": 1, "агенты": 1 };
+  const DIGEST_TOP = { 1: 5, 7: 8 };      // сюжетов на тему
+  const PER_SOURCE = 2;                    // не больше N сюжетов от одного источника в теме
+  function score(g) {
+    const tags = new Set(g.items.flatMap((x) => x.tags));
+    return 3 * (g.nSources - 1) + 2 * (Math.max(...g.items.map(weight)) - 1) +
+      [...tags].reduce((sum, t) => sum + (TAG_SCORE[t] || 0), 0);
+  }
+  function digestSections() {
+    const days = state.digestDays;
+    const minDate = new Date(Date.now() - days * 86400e3).toISOString();
+    const recent = state.items.filter((it) => it.published >= minDate);
+    const groups = groupItems(recent);
+    groups.forEach((g) => { g.score = score(g); });
+    const sections = Object.entries(CATS).map(([cat, title]) => {
+      const inCat = groups.filter((g) => g.main.category === cat)
+        .sort((a, b) => b.score - a.score || (a.main.published < b.main.published ? 1 : -1));
+      const perSrc = {}, top = [];
+      for (const g of inCat) {
+        if (top.length >= DIGEST_TOP[days]) break;
+        const sid = g.main.source;
+        perSrc[sid] = (perSrc[sid] || 0) + 1;
+        if (perSrc[sid] > PER_SOURCE) continue;
+        top.push(g);
+      }
+      return { cat, title, top, total: inCat.length };
+    });
+    return { sections, nItems: recent.length, nGroups: groups.length };
+  }
+  function renderDigest() {
+    document.querySelectorAll("#digest-period [data-days]").forEach((b) => b.classList.toggle("on", +b.dataset.days === state.digestDays));
+    const d = digestSections();
+    $("digest-note").textContent = `${d.nItems} записей → ${d.nGroups} сюжетов после склейки дублей. Выше — то, о чём пишут ` +
+      `несколько источников, официальные блоги, релизы и безопасность.`;
+    $("digest-list").innerHTML = d.sections.map((s) => `
+      <h2 class="digest-h" data-cat="${esc(s.cat)}">${esc(s.title)} <span class="muted small">${s.top.length} из ${s.total}</span></h2>
+      ${s.top.length ? `<ol class="list">${s.top.map(card).join("")}</ol>` : `<p class="muted small">За этот период ничего.</p>`}
+      ${s.total > s.top.length ? `<a class="digest-more small" href="#${esc(s.cat)}">Вся лента «${esc(s.title)}» →</a>` : ""}`).join("");
+  }
+  $("digest-period").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-days]"); if (!b) return;
+    state.digestDays = +b.dataset.days; store.set("digestDays", state.digestDays); renderDigest();
+  });
+  $("digest-copy").addEventListener("click", async () => {
+    const d = digestSections();
+    const head = `Дайджест IT/ИИ ${state.digestDays === 1 ? "за сутки" : "за неделю"} (${new Date().toLocaleDateString("ru")})`;
+    const parts = d.sections.filter((s) => s.top.length).map((s) =>
+      `\n${s.title}\n` + s.top.map((g) => `• ${g.main.title}${g.nSources > 1 ? ` [${g.nSources} ист.]` : ""}\n  ${g.main.link}`).join("\n"));
+    const text = [head, ...parts].join("\n");
+    const btn = $("digest-copy");
+    try { await navigator.clipboard.writeText(text); btn.textContent = "Скопировано ✓"; }
+    catch { btn.textContent = "Не удалось скопировать"; }
+    setTimeout(() => { btn.textContent = "Скопировать текстом"; }, 2000);
   });
 
   // ---- База знаний ----
@@ -190,6 +289,7 @@
 
   async function load() {
     state.period = store.get("period", 7);
+    state.digestDays = store.get("digestDays", 1) === 7 ? 7 : 1;
     $("period").value = String(state.period);
     const [news, kb] = await Promise.allSettled([
       fetch("data/news.json", { cache: "no-cache" }).then((r) => r.json()),

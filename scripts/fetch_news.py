@@ -133,8 +133,95 @@ def tags_for(title: str, summary: str, category: str) -> list[str]:
     return tags
 
 
+# ---- Дедупликация: одна новость из разных источников -> общий "group" ----
+DEDUP_WINDOW = timedelta(days=3)   # сравниваем только записи, опубликованные близко по времени
+DEDUP_JACCARD = 0.3                # доля общих значимых слов (0.2 уже даёт ложные склейки)
+DEDUP_MIN_SHARED = 3               # и минимум столько общих слов
+STOPWORDS = set("""
+a an the and or but of to in on at for from by with without as is are was were be been being it its this that these
+those how why what when where who which new now just about into over after before vs via up out more most than your
+you we our they their his her not no can will would could should may might has have had do does did says say said
+get gets got here there all any one two first latest week day today report reports
+и в во на не что как к с со по из за от до для о об а но или же ли бы то это этот эта эти его ее их мы вы они он она
+новый новая новые как почему теперь уже ещё еще так при под над без про через чем который которая которые
+""".split())
+WORD_RE = re.compile(r"[\w.+-]+", re.U)
+
+
+def title_tokens(title: str) -> frozenset[str]:
+    out = set()
+    for w in WORD_RE.findall(title.lower()):
+        w = w.strip(".+-_")
+        if len(w) < 2 or w in STOPWORDS:
+            continue
+        # Грубый стемминг: «launches»/«launched», «модели»/«моделью» -> общий префикс.
+        out.add(w[:6] if w.isalpha() else w)
+    return frozenset(out)
+
+
+def link_key(link: str) -> str:
+    return re.sub(r"^https?://(www\.)?", "", link.split("?")[0].split("#")[0]).rstrip("/").lower()
+
+
+def assign_groups(items: list[dict]) -> int:
+    """Проставляет it["group"] у записей, которые пересказывают одну новость. Возвращает число склеек.
+
+    Правила: разные источники; дата в пределах DEDUP_WINDOW; совпадает ссылка
+    или заголовки похожи (Jaccard >= DEDUP_JACCARD и >= DEDUP_MIN_SHARED общих слов).
+    """
+    n = len(items)
+    parent = list(range(n))
+
+    def find(i: int) -> int:
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    toks = [title_tokens(it["title"]) for it in items]
+    dates = [datetime.fromisoformat(it["published"]) for it in items]
+    index: dict[str, list[int]] = {}
+    by_link: dict[str, int] = {}
+    merges = 0
+    for i, it in enumerate(items):
+        cands: dict[int, int] = {}
+        for t in toks[i]:
+            for j in index.get(t, ()):
+                cands[j] = cands.get(j, 0) + 1
+        lk = link_key(it["link"])
+        if lk in by_link:
+            cands[by_link[lk]] = 10**6  # та же ссылка = точно дубль
+        for j, shared in cands.items():
+            if items[j]["source"] == it["source"] or abs(dates[i] - dates[j]) > DEDUP_WINDOW:
+                continue
+            if shared < 10**6:
+                union = len(toks[i]) + len(toks[j]) - shared
+                if shared < DEDUP_MIN_SHARED or shared / union < DEDUP_JACCARD:
+                    continue
+            ri, rj = find(i), find(j)
+            if ri != rj:
+                parent[max(ri, rj)] = min(ri, rj)
+                merges += 1
+        for t in toks[i]:
+            index.setdefault(t, []).append(i)
+        by_link.setdefault(lk, i)
+
+    for it in items:
+        it.pop("group", None)
+    roots: dict[int, list[int]] = {}
+    for i in range(n):
+        roots.setdefault(find(i), []).append(i)
+    for members in roots.values():
+        if len(members) > 1:
+            gid = items[members[0]]["id"]
+            for m in members:
+                items[m]["group"] = gid
+    return merges
+
+
 def fetch_source(src: dict) -> tuple[dict, list[dict]]:
-    status = {"id": src["id"], "name": src["name"], "category": src["category"], "ok": False, "count": 0, "error": None}
+    status = {"id": src["id"], "name": src["name"], "category": src["category"], "ok": False, "count": 0, "error": None,
+              "weight": src.get("weight", 1), "family": src.get("family", src["id"])}
     try:
         req = urllib.request.Request(src["url"], headers={"User-Agent": USER_AGENT, "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*"})
         with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
@@ -215,13 +302,14 @@ def main() -> int:
             it["published"] = it["first_seen"]
     items.sort(key=lambda it: it["published"], reverse=True)
     items = items[:MAX_TOTAL]
+    merges = assign_groups(items)
 
     OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     payload = {"generated_at": now_iso, "sources": statuses, "items": items}
     OUT_FILE.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
     failed = [s for s in statuses if not s["ok"]]
-    print(f"Источников: {len(statuses)}, ошибок: {len(failed)}, новых записей: {new_count}, всего: {len(items)}")
+    print(f"Источников: {len(statuses)}, ошибок: {len(failed)}, новых записей: {new_count}, всего: {len(items)}, склеено дублей: {merges}")
     for s in statuses:
         mark = "OK " if s["ok"] else "ERR"
         print(f"  [{mark}] {s['name']:<32} {s['count']:>3}  {s['error'] or ''}")

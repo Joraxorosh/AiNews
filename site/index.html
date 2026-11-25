@@ -19,6 +19,7 @@
     </div>
     <nav class="wrap tabs" id="tabs" aria-label="Разделы">
       <a href="#feed" data-tab="feed">Лента</a>
+      <a href="#digest" data-tab="digest">Дайджест</a>
       <a href="#models" data-tab="models">Модели ИИ</a>
       <a href="#tools" data-tab="tools">Инструменты</a>
       <a href="#science" data-tab="science">Наука</a>
@@ -47,6 +48,19 @@
       <p id="count" class="muted small"></p>
       <ol id="list" class="list"></ol>
       <button id="more" class="more" type="button" hidden>Показать ещё</button>
+    </section>
+
+    <!-- Дайджест -->
+    <section id="digest-view" hidden>
+      <div class="filters digest-bar">
+        <div class="tag-bar" id="digest-period">
+          <button class="chip" data-days="1" type="button">За сутки</button>
+          <button class="chip" data-days="7" type="button">За неделю</button>
+        </div>
+        <button id="digest-copy" class="chip" type="button" title="Скопировать дайджест как текст, чтобы переслать">Скопировать текстом</button>
+      </div>
+      <p id="digest-note" class="muted small"></p>
+      <div id="digest-list"></div>
     </section>
 
     <!-- База знаний -->
