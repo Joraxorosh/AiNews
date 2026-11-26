@@ -126,6 +126,22 @@ a.hn:hover { color: var(--accent); text-decoration: underline; }
 .star { background: none; border: none; cursor: pointer; font-size: 18px; line-height: 1; color: var(--muted); padding: 2px; }
 .star.on { color: var(--star); }
 .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.kb-link {
+  font-size: 11.5px; padding: 1px 8px; border-radius: 999px; text-decoration: none;
+  border: 1px solid var(--border); color: var(--text-2); background: var(--surface);
+}
+.kb-link::before { content: "→ "; color: var(--accent); }
+.kb-link:hover { border-color: var(--accent); color: var(--accent); }
+/* Мои темы */
+.watch-row { display: flex; align-items: center; gap: 8px; margin: -2px 0 10px; flex-wrap: wrap; }
+.watch-label { font-size: 13px; font-weight: 600; color: var(--muted); }
+#watch {
+  flex: 1 1 260px; font: inherit; font-size: 14px; color: var(--text); background: var(--surface);
+  border: 1px dashed var(--border); border-radius: 8px; padding: 5px 10px; min-width: 0;
+}
+#watch:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-style: solid; }
+.card.watched { background: color-mix(in srgb, var(--star) 7%, var(--surface)); border-color: color-mix(in srgb, var(--star) 45%, var(--border)); }
+mark { background: color-mix(in srgb, var(--star) 35%, transparent); color: inherit; border-radius: 3px; padding: 0 2px; }
 .tag { font-size: 11.5px; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); opacity: .85; }
 .more { display: block; margin: 16px auto; font: inherit; padding: 8px 18px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
 .empty { text-align: center; color: var(--muted); padding: 40px 0; }
@@ -156,6 +172,13 @@ a.hn:hover { color: var(--accent); text-decoration: underline; }
 .kb ul { margin: 0; padding-left: 18px; font-size: 14px; }
 .kb .pros li::marker { content: "+  "; color: var(--new); font-weight: 700; }
 .kb .cons li::marker { content: "−  "; color: var(--c-it); font-weight: 700; }
+.kb-grid.focus { grid-template-columns: minmax(0, 720px); }
+.kb-news { list-style: none; padding: 0 !important; display: grid; gap: 6px; }
+.kb-news a { color: var(--text); text-decoration: none; }
+.kb-news a:hover { color: var(--accent); text-decoration: underline; }
+.kb-news .muted { font-size: 12px; }
+.kb-more { color: var(--accent); text-decoration: none; }
+#kb-focus a { color: var(--accent); text-decoration: none; }
 .kb .links { display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; margin-top: auto; padding-top: 4px; }
 .kb .links a { color: var(--accent); }
 
@@ -338,3 +361,9 @@ a.hn:hover { color: var(--accent); text-decoration: underline; }
 [data-skin="paper"] .review-points li { break-inside: avoid; margin-bottom: 12px; }
 [data-skin="paper"] .review-points p { color: var(--text); text-align: justify; hyphens: auto; }
 @media (max-width: 700px) { [data-skin="paper"] .review-points { column-count: 1; } }
+
+/* Газета: связи с базой знаний и мои темы */
+[data-skin="paper"] .kb-link { border: none; background: none; padding: 0; font-style: italic; color: var(--accent); font-size: 13px; }
+[data-skin="paper"] .kb-link::before { content: "→ "; }
+[data-skin="paper"] #watch { border-radius: 0; background: transparent; font-family: var(--serif); }
+[data-skin="paper"] .card.watched { background: none; border-bottom-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); padding-left: 10px; }

@@ -64,6 +64,11 @@
         <select id="source" aria-label="Источник"><option value="">Все источники</option></select>
         <label class="check"><input type="checkbox" id="only-new"> только новое</label>
       </div>
+      <div class="watch-row">
+        <label for="watch" class="watch-label" title="Новости с этими словами подсвечиваются в ленте">Мои темы</label>
+        <input id="watch" type="text" placeholder="через запятую: Claude Code, GigaChat, уязвимость" autocomplete="off">
+        <label class="check"><input type="checkbox" id="only-watch"> только они</label>
+      </div>
       <div id="tag-bar" class="tag-bar"></div>
       <p id="count" class="muted small"></p>
       <ol id="list" class="list"></ol>
@@ -96,6 +101,7 @@
         <input id="kb-q" type="search" placeholder="Поиск по базе знаний…" autocomplete="off">
       </div>
       <div id="kb-sections" class="tag-bar"></div>
+      <p id="kb-focus" class="small" hidden><a href="#kb">← Вся база знаний</a></p>
       <p id="kb-note" class="muted small"></p>
       <div id="kb-list" class="kb-grid"></div>
     </section>

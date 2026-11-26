@@ -54,7 +54,8 @@
           "title": "Новости",
           "url": "https://www.anthropic.com/news"
         }
-      ]
+      ],
+      "match": "claude(?! ?code)(?! agent sdk)(?! ship)|(?:opus|sonnet|haiku|fable) 5[\\d.]*|claude mythos"
     },
     {
       "section": "models",
@@ -86,7 +87,8 @@
           "title": "Новости",
           "url": "https://openai.com/news/"
         }
-      ]
+      ],
+      "match": "gpt-?\\d[\\w.]*|chatgpt"
     },
     {
       "section": "models",
@@ -123,7 +125,8 @@
           "title": "Genie 4",
           "url": "https://blog.google/innovation-and-ai/models-and-research/google-deepmind/genie-4-now-available-project-genie/"
         }
-      ]
+      ],
+      "match": "gemini(?! cli)|nano banana"
     },
     {
       "section": "models",
@@ -151,7 +154,8 @@
           "title": "Документация",
           "url": "https://docs.x.ai/docs/overview"
         }
-      ]
+      ],
+      "match": "grok"
     },
     {
       "section": "models",
@@ -178,7 +182,8 @@
           "title": "Muse Spark 1.1 и Meta Model API",
           "url": "https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/"
         }
-      ]
+      ],
+      "match": "muse (?:spark|wonder|glimmer|ai)|meta muse"
     },
     {
       "section": "models",
@@ -211,7 +216,8 @@
           "title": "Muse Spark Open — карточка модели",
           "url": "https://huggingface.co/meta-models/Muse-Spark-Open-816B-A42B"
         }
-      ]
+      ],
+      "match": "llama(?!\\.cpp|index| ?stack|-server)"
     },
     {
       "section": "models",
@@ -243,7 +249,8 @@
           "title": "Qwen3.8-27B — карточка модели",
           "url": "https://huggingface.co/Qwen/Qwen3.8-27B"
         }
-      ]
+      ],
+      "match": "qwen[\\w.-]*"
     },
     {
       "section": "models",
@@ -271,7 +278,8 @@
           "title": "DeepSeek-V4.1-Flash — карточка модели",
           "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash"
         }
-      ]
+      ],
+      "match": "deepseek[\\w.-]*"
     },
     {
       "section": "models",
@@ -307,7 +315,8 @@
           "title": "Документация",
           "url": "https://docs.mistral.ai/"
         }
-      ]
+      ],
+      "match": "mistral|ministral|magistral|devstral"
     },
     {
       "section": "models",
@@ -334,7 +343,8 @@
           "title": "Hugging Face (google)",
           "url": "https://huggingface.co/google"
         }
-      ]
+      ],
+      "match": "gemma[\\w.-]*"
     },
     {
       "section": "models",
@@ -360,7 +370,8 @@
           "title": "Kimi K3 — карточка модели",
           "url": "https://huggingface.co/moonshotai/Kimi-K3"
         }
-      ]
+      ],
+      "match": "kimi[\\w.-]*|moonshot ai"
     },
     {
       "section": "models",
@@ -387,7 +398,8 @@
           "title": "GLM-5.3 — карточка модели",
           "url": "https://huggingface.co/zai-org/GLM-5.3"
         }
-      ]
+      ],
+      "match": "glm-?\\d[\\w.]*|z\\.ai|zhipu"
     },
     {
       "section": "models",
@@ -415,7 +427,8 @@
           "title": "Hugging Face — gpt-oss-20b",
           "url": "https://huggingface.co/openai/gpt-oss-20b"
         }
-      ]
+      ],
+      "match": "gpt-oss[\\w-]*"
     },
     {
       "section": "models",
@@ -443,7 +456,8 @@
           "title": "Hugging Face — Nemotron 3.5 Lightning",
           "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16"
         }
-      ]
+      ],
+      "match": "nemotron"
     },
     {
       "section": "models",
@@ -475,7 +489,8 @@
           "title": "Анонс GigaChat 4 на Хабре",
           "url": "https://habr.com/ru/companies/sberbank/articles/1112118/"
         }
-      ]
+      ],
+      "match": "gigachat|гигачат\\p{L}*"
     },
     {
       "section": "models",
@@ -512,7 +527,8 @@
           "title": "Alice AI LLM Flash",
           "url": "https://yandex.cloud/ru/blog/alice-ai-llm-flash"
         }
-      ]
+      ],
+      "match": "yandexgpt|alice ai"
     },
     {
       "section": "tools",
@@ -544,7 +560,8 @@
           "title": "Релизы",
           "url": "https://github.com/anthropics/claude-code/releases"
         }
-      ]
+      ],
+      "match": "claude code"
     },
     {
       "section": "tools",
@@ -572,7 +589,8 @@
           "title": "Copilot CLI",
           "url": "https://docs.github.com/en/copilot/concepts/agents/about-copilot-cli"
         }
-      ]
+      ],
+      "match": "copilot"
     },
     {
       "section": "tools",
@@ -599,7 +617,8 @@
           "title": "Сайт",
           "url": "https://cursor.com/"
         }
-      ]
+      ],
+      "match": "anysphere|cursor (?:ide|ai|agent|composer|rules)|(?:в|with|in|using) cursor"
     },
     {
       "section": "tools",
@@ -627,7 +646,8 @@
           "title": "GitHub",
           "url": "https://github.com/ollama/ollama"
         }
-      ]
+      ],
+      "match": "ollama"
     },
     {
       "section": "tools",
@@ -654,7 +674,8 @@
           "title": "Анонс v1.0.0",
           "url": "https://huggingface.co/blog/ggml-org/llama-cpp-v1"
         }
-      ]
+      ],
+      "match": "llama\\.cpp|ggml"
     },
     {
       "section": "tools",
@@ -682,7 +703,8 @@
           "title": "GitHub",
           "url": "https://github.com/vllm-project/vllm"
         }
-      ]
+      ],
+      "match": "vllm"
     },
     {
       "section": "tools",
@@ -714,7 +736,8 @@
           "title": "HF и OpenRouter",
           "url": "https://huggingface.co/blog/openrouter"
         }
-      ]
+      ],
+      "match": "hugging ?face"
     },
     {
       "section": "tools",
@@ -741,7 +764,8 @@
           "title": "GitHub",
           "url": "https://github.com/langchain-ai/langchain"
         }
-      ]
+      ],
+      "match": "langchain[\\w-]*|langgraph|langsmith"
     },
     {
       "section": "tools",
@@ -764,7 +788,8 @@
           "title": "Документация",
           "url": "https://developers.llamaindex.ai/"
         }
-      ]
+      ],
+      "match": "llamaindex|llamaparse"
     },
     {
       "section": "tools",
@@ -796,7 +821,8 @@
           "title": "Как устроена песочница",
           "url": "https://openai.com/index/inside-the-codex-sandbox"
         }
-      ]
+      ],
+      "match": "codex"
     },
     {
       "section": "tools",
@@ -820,7 +846,8 @@
           "title": "GitHub",
           "url": "https://github.com/cline/cline"
         }
-      ]
+      ],
+      "match": "cline"
     },
     {
       "section": "tools",
@@ -847,7 +874,8 @@
           "title": "Для разработчиков",
           "url": "https://lmstudio.ai/docs/developer"
         }
-      ]
+      ],
+      "match": "lm studio"
     },
     {
       "section": "tools",
@@ -874,7 +902,8 @@
           "title": "GitHub",
           "url": "https://github.com/sgl-project/sglang"
         }
-      ]
+      ],
+      "match": "sglang"
     },
     {
       "section": "tools",
@@ -901,7 +930,8 @@
           "title": "Инцидент с провайдерами",
           "url": "https://www.bleepingcomputer.com/news/security/openrouter-drops-ai-providers-over-leaked-prompts-and-secrets/"
         }
-      ]
+      ],
+      "match": "openrouter"
     },
     {
       "section": "tools",
@@ -929,7 +959,8 @@
           "title": "GitHub",
           "url": "https://github.com/langfuse/langfuse"
         }
-      ]
+      ],
+      "match": "langfuse"
     },
     {
       "section": "tools",
@@ -956,7 +987,8 @@
           "title": "GitHub",
           "url": "https://github.com/qdrant/qdrant"
         }
-      ]
+      ],
+      "match": "qdrant"
     },
     {
       "section": "tools",
@@ -983,7 +1015,8 @@
           "title": "GitHub (JS/TS)",
           "url": "https://github.com/openai/openai-agents-js"
         }
-      ]
+      ],
+      "match": "agents sdk"
     },
     {
       "section": "concepts",
@@ -1042,7 +1075,8 @@
           "title": "Anthropic: Contextual Retrieval",
           "url": "https://www.anthropic.com/research/contextual-retrieval"
         }
-      ]
+      ],
+      "match": "rag|retrieval-augmented"
     },
     {
       "section": "concepts",
@@ -1069,7 +1103,8 @@
           "title": "MTEB Leaderboard",
           "url": "https://huggingface.co/spaces/mteb/leaderboard"
         }
-      ]
+      ],
+      "match": "эмбеддинг\\p{L}*|embeddings?"
     },
     {
       "section": "concepts",
@@ -1100,7 +1135,8 @@
           "title": "Hugging Face PEFT",
           "url": "https://huggingface.co/docs/peft/index"
         }
-      ]
+      ],
+      "match": "fine-?tun\\p{L}*|lora|дообучени\\p{L}*"
     },
     {
       "section": "concepts",
@@ -1127,7 +1163,8 @@
           "title": "llama.cpp (GGUF)",
           "url": "https://github.com/ggml-org/llama.cpp"
         }
-      ]
+      ],
+      "match": "квантизаци\\p{L}*|quantiz\\p{L}*"
     },
     {
       "section": "concepts",
@@ -1150,7 +1187,8 @@
           "title": "Hugging Face: Mixture of Experts Explained",
           "url": "https://huggingface.co/blog/moe"
         }
-      ]
+      ],
+      "match": "mixture of experts|moe"
     },
     {
       "section": "concepts",
@@ -1181,7 +1219,8 @@
           "title": "Claude: Extended thinking",
           "url": "https://platform.claude.com/docs/en/build-with-claude/extended-thinking"
         }
-      ]
+      ],
+      "match": "reasoning models?|рассуждающ\\p{L}* модел\\p{L}*"
     },
     {
       "section": "concepts",
@@ -1236,7 +1275,8 @@
           "title": "Anthropic: анонс MCP",
           "url": "https://www.anthropic.com/news/model-context-protocol"
         }
-      ]
+      ],
+      "match": "mcp|model context protocol"
     },
     {
       "section": "concepts",
@@ -1263,7 +1303,8 @@
           "title": "Обзор галлюцинаций в LLM (статья)",
           "url": "https://arxiv.org/abs/2311.05232"
         }
-      ]
+      ],
+      "match": "галлюцинаци\\p{L}*|hallucinat\\p{L}*"
     },
     {
       "section": "concepts",
@@ -1290,7 +1331,8 @@
           "title": "Epoch AI: бенчмарки",
           "url": "https://epoch.ai/benchmarks"
         }
-      ]
+      ],
+      "match": "бенчмарк\\p{L}*|benchmarks?"
     },
     {
       "section": "concepts",
@@ -1316,7 +1358,8 @@
           "title": "Simon Willison: серия статей",
           "url": "https://simonwillison.net/series/prompt-injection/"
         }
-      ]
+      ],
+      "match": "prompt injection|промпт-инъекци\\p{L}*"
     },
     {
       "section": "concepts",
@@ -1338,7 +1381,8 @@
           "title": "Anthropic: Effective context engineering for AI agents",
           "url": "https://www.anthropic.com/research/effective-context-engineering-for-ai-agents"
         }
-      ]
+      ],
+      "match": "context engineering|контекст-инжиниринг\\p{L}*"
     },
     {
       "section": "concepts",
@@ -1364,7 +1408,8 @@
           "title": "OpenAI: Prompt caching",
           "url": "https://developers.openai.com/api/docs/guides/prompt-caching"
         }
-      ]
+      ],
+      "match": "prompt caching"
     },
     {
       "section": "concepts",
@@ -1390,7 +1435,8 @@
           "title": "Claude: Structured outputs",
           "url": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"
         }
-      ]
+      ],
+      "match": "structured outputs?|json mode"
     },
     {
       "section": "concepts",
@@ -1416,7 +1462,8 @@
           "title": "DeepSeek-R1 (дистиллированные модели)",
           "url": "https://arxiv.org/abs/2501.12948"
         }
-      ]
+      ],
+      "match": "дистилляци\\p{L}*|distill\\p{L}*"
     },
     {
       "section": "concepts",
@@ -1442,7 +1489,8 @@
           "title": "Hugging Face: Assisted Generation",
           "url": "https://huggingface.co/blog/assisted-generation"
         }
-      ]
+      ],
+      "match": "speculative decoding"
     },
     {
       "section": "concepts",
@@ -1492,7 +1540,8 @@
           "title": "OpenAI: Evals",
           "url": "https://developers.openai.com/api/docs/guides/evals"
         }
-      ]
+      ],
+      "match": "evals"
     },
     {
       "section": "concepts",
@@ -1514,7 +1563,8 @@
           "title": "NVIDIA NeMo Guardrails",
           "url": "https://github.com/NVIDIA-NeMo/Guardrails"
         }
-      ]
+      ],
+      "match": "guardrails?"
     },
     {
       "section": "concepts",
@@ -1540,7 +1590,8 @@
           "title": "pgvector",
           "url": "https://github.com/pgvector/pgvector"
         }
-      ]
+      ],
+      "match": "векторн\\p{L}* баз\\p{L}*|vector (?:db|databases?|store)"
     },
     {
       "section": "concepts",
@@ -1562,7 +1613,8 @@
           "title": "OSI: Open Source AI Definition 1.0",
           "url": "https://opensource.org/ai/open-source-ai-definition"
         }
-      ]
+      ],
+      "match": "open[- ]weights?"
     },
     {
       "section": "concepts",
@@ -1588,7 +1640,8 @@
           "title": "Constitutional AI (статья)",
           "url": "https://arxiv.org/abs/2212.08073"
         }
-      ]
+      ],
+      "match": "rlhf|rlaif"
     },
     {
       "section": "concepts",
@@ -1614,7 +1667,8 @@
           "title": "OpenAI: Learning to reason with LLMs",
           "url": "https://openai.com/index/learning-to-reason-with-llms/"
         }
-      ]
+      ],
+      "match": "test-time compute"
     },
     {
       "section": "concepts",
@@ -1640,7 +1694,8 @@
           "title": "OpenAI: Computer-Using Agent",
           "url": "https://openai.com/index/computer-using-agent/"
         }
-      ]
+      ],
+      "match": "computer use"
     },
     {
       "section": "concepts",
@@ -1666,7 +1721,8 @@
           "title": "GitHub: a2aproject/A2A",
           "url": "https://github.com/a2aproject/A2A"
         }
-      ]
+      ],
+      "match": "a2a|agent2agent"
     }
   ]
 }

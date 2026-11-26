@@ -65,7 +65,8 @@
   const state = {
     tab: "feed", items: [], sources: {}, kb: null, weekly: null, reviewIdx: 0,
     q: "", period: 7, source: "", onlyNew: false, tag: "", shown: PAGE,
-    kbQ: "", kbSection: "", digestDays: 1,
+    kbQ: "", kbSection: "", kbFocus: "", digestDays: 1,
+    watch: [], onlyWatch: false,
     // Избранное хранит копии записей: так они не пропадут, когда выпадут из ленты (хранится 45 дней).
     saved: new Map(Object.entries(store.get("savedItems", {}))),
   };
@@ -99,6 +100,8 @@
   // ---- Вкладки ----
   function setTab(tab) {
     if (tab === "review") { state.digestDays = "review"; tab = "digest"; }  // #review — ссылка сразу на обзор недели
+    state.kbFocus = "";
+    if (tab.startsWith("kb/")) { state.kbFocus = decodeURIComponent(tab.slice(3)); tab = "kb"; }  // #kb/Gemini — одна запись
     if (!["feed", "digest", "saved", "kb", "themes", ...Object.keys(CATS)].includes(tab)) tab = "feed";
     state.tab = tab; state.shown = PAGE; state.tag = "";
     document.querySelectorAll("#tabs a").forEach((a) => a.classList.toggle("active", a.dataset.tab === tab));
@@ -106,7 +109,7 @@
     $("kb-view").hidden = tab !== "kb";
     $("digest-view").hidden = tab !== "digest";
     $("themes-view").hidden = tab !== "themes";
-    if (tab === "kb") renderKb();
+    if (tab === "kb") { renderKb(); if (state.kbFocus) window.scrollTo(0, 0); }
     else if (tab === "digest") renderDigest();
     else if (tab === "themes") renderThemes();
     else { fillSources(); renderNews(); }
@@ -140,6 +143,7 @@
       (!minDate || it.published >= minDate) &&
       (!state.source || it.source === state.source) &&
       (!state.onlyNew || isNew(it)) &&
+      (!state.onlyWatch || isWatched(it)) &&
       (ignoreTag || !state.tag || it.tags.includes(state.tag)) &&
       (!q || (it.title + " " + it.summary).toLowerCase().includes(q)));
   }
@@ -182,6 +186,36 @@
     return m10 === 1 && m100 !== 11 ? one : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? few : many;
   };
 
+  // ---- Связь с базой знаний: у записей kb.json есть шаблон match ----
+  let kbMatchers = [];
+  const kbHits = new Map();   // id новости -> записи базы знаний (считаем один раз)
+  function initKbMatchers() {
+    const order = { models: 0, tools: 1, concepts: 2 };
+    kbMatchers = (state.kb ? state.kb.items : []).filter((k) => k.match).flatMap((k) => {
+      try { return [{ item: k, rx: new RegExp(`(?<![\\p{L}\\d])(?:${k.match})(?![\\p{L}\\d])`, "iu") }]; }
+      catch { return []; }   // старый браузер без lookbehind/\p{L} — просто без связей
+    }).sort((a, b) => order[a.item.section] - order[b.item.section]);
+  }
+  function kbFor(it) {
+    if (!kbHits.has(it.id)) {
+      const hay = `${it.title} ${it.summary}`;
+      kbHits.set(it.id, kbMatchers.filter((m) => m.rx.test(hay)).map((m) => m.item));
+    }
+    return kbHits.get(it.id);
+  }
+  const kbHref = (k) => `#kb/${encodeURIComponent(k.name)}`;
+
+  // ---- Мои темы: слова, которые подсвечиваются в ленте (хранятся в браузере) ----
+  const reEsc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  let watchRx = null;
+  function setWatch(text) {
+    state.watch = text.split(",").map((w) => w.trim()).filter(Boolean);
+    watchRx = state.watch.length ? new RegExp(state.watch.map((w) => reEsc(esc(w))).join("|"), "giu") : null;
+  }
+  const isWatched = (it) => !!watchRx && state.watch.some((w) => `${it.title} ${it.summary}`.toLowerCase().includes(w.toLowerCase()));
+  // Подсветка по уже экранированному тексту: слова тоже экранированы, поэтому разметка не ломается.
+  const hl = (text) => (watchRx ? esc(text).replace(watchRx, (m) => `<mark>${m}</mark>`) : esc(text));
+
   const MAX_TAGS = 3;
   function hnMeta(it) {
     if (it.points == null) return "";
@@ -197,7 +231,9 @@
     const src = state.sources[it.source];
     // В общей ленте и избранном показываем тему: там перемешаны все разделы.
     const showCat = opts.showCat && CATS[it.category];
-    return `<li class="card${opts.lead ? " lead" : ""}" data-cat="${esc(it.category)}">
+    const kbs = kbFor(it).slice(0, 3);
+    const watched = isWatched(it) || others.some(isWatched);
+    return `<li class="card${opts.lead ? " lead" : ""}${watched ? " watched" : ""}" data-cat="${esc(it.category)}">
       <div class="row">
         <div class="body">
           <div class="meta">
@@ -208,11 +244,12 @@
             ${hnMeta(it)}
             ${fresh ? `<span class="badge-new">новое</span>` : ""}
           </div>
-          <h3><a href="${esc(safeUrl(it.link))}" target="_blank" rel="noopener noreferrer">${esc(it.title)}</a></h3>
-          ${it.summary ? `<p class="sum">${esc(it.summary)}</p>` : ""}
+          <h3><a href="${esc(safeUrl(it.link))}" target="_blank" rel="noopener noreferrer">${hl(it.title)}</a></h3>
+          ${it.summary ? `<p class="sum">${hl(it.summary)}</p>` : ""}
           ${others.length ? `<div class="also">Также: ${others.map((o) =>
             `<a href="${esc(safeUrl(o.link))}" target="_blank" rel="noopener noreferrer" title="${esc(o.title)}">${esc(srcName(o))}</a>`).join(", ")}</div>` : ""}
-          ${it.tags.length ? `<div class="tags">${it.tags.slice(0, MAX_TAGS).map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>` : ""}
+          ${it.tags.length || kbs.length ? `<div class="tags">${it.tags.slice(0, MAX_TAGS).map((t) => `<span class="tag">${esc(t)}</span>`).join("")}${
+            kbs.map((k) => `<a class="kb-link" href="${esc(kbHref(k))}" title="Открыть в базе знаний">${esc(k.name)}</a>`).join("")}</div>` : ""}
         </div>
         <button class="star${state.saved.has(it.id) ? " on" : ""}" data-star="${esc(it.id)}" type="button"
           title="${state.saved.has(it.id) ? "Убрать из избранного" : "В избранное"}" aria-label="Избранное">${state.saved.has(it.id) ? "★" : "☆"}</button>
@@ -228,8 +265,10 @@
     const groups = state.tab === "saved" ? list.map((it) => ({ main: it, items: [it], others: [], nSources: 1 })) : groupItems(list);
     const newN = groups.filter((g) => g.items.some(isNew)).length;
     const merged = list.length - groups.length;
+    const watchN = watchRx ? groups.filter((g) => g.items.some(isWatched)).length : 0;
     $("count").textContent = `${groups.length} записей` + (merged ? ` · склеено дублей: ${merged}` : "") +
-      (newN && !state.onlyNew ? ` · ${newN} новых с прошлого визита` : "");
+      (newN && !state.onlyNew ? ` · ${newN} новых с прошлого визита` : "") +
+      (watchN && !state.onlyWatch ? ` · ${watchN} по моим темам` : "");
     const showCat = state.tab === "feed" || state.tab === "saved";
     let lastDay = "";
     const html = groups.slice(0, state.shown).map((g, i) => {
@@ -268,6 +307,12 @@
   $("period").addEventListener("change", (e) => { state.period = +e.target.value; state.shown = PAGE; store.set("period", state.period); renderNews(); });
   $("source").addEventListener("change", (e) => { state.source = e.target.value; state.shown = PAGE; renderNews(); });
   $("only-new").addEventListener("change", (e) => { state.onlyNew = e.target.checked; state.shown = PAGE; renderNews(); });
+  $("only-watch").addEventListener("change", (e) => { state.onlyWatch = e.target.checked; state.shown = PAGE; renderNews(); });
+  let wTimer = 0;
+  $("watch").addEventListener("input", (e) => {
+    clearTimeout(wTimer);
+    wTimer = setTimeout(() => { setWatch(e.target.value); store.set("watch", e.target.value); state.shown = PAGE; renderNews(); }, 250);
+  });
   $("more").addEventListener("click", () => { state.shown += PAGE; renderNews(); });
   $("tag-bar").addEventListener("click", (e) => {
     const b = e.target.closest("[data-tag]"); if (!b) return;
@@ -393,7 +438,9 @@
     $("kb-note").textContent = `Обновлено: ${kb.updated}. ${kb.note || ""}`;
     const q = state.kbQ.trim().toLowerCase();
     const secTitles = Object.fromEntries(kb.sections.map((s) => [s.id, s]));
-    const items = kb.items.filter((it) =>
+    $("kb-focus").hidden = !state.kbFocus;
+    $("kb-list").classList.toggle("focus", !!state.kbFocus);
+    const items = state.kbFocus ? kb.items.filter((it) => it.name === state.kbFocus) : kb.items.filter((it) =>
       (!state.kbSection || it.section === state.kbSection) &&
       (!q || JSON.stringify(it).toLowerCase().includes(q)));
     $("kb-list").innerHTML = items.length ? items.map((it) => {
@@ -405,9 +452,26 @@
         ${it.pros && it.pros.length ? `<h4>${esc(sec.pros_label || "Сильные стороны")}</h4>${list(it.pros, "pros")}` : ""}
         ${it.cons && it.cons.length ? `<h4>${esc(sec.cons_label || "Слабые стороны")}</h4>${list(it.cons, "cons")}` : ""}
         ${it.best_for ? `<h4>Когда выбирать</h4><p>${esc(it.best_for)}</p>` : ""}
+        ${kbNews(it)}
         ${it.links && it.links.length ? `<div class="links">${it.links.map((l) => `<a href="${esc(safeUrl(l.url))}" target="_blank" rel="noopener noreferrer">${esc(l.title)} ↗</a>`).join("")}</div>` : ""}
       </article>`;
     }).join("") : `<p class="empty">Ничего не найдено.</p>`;
+  }
+  // «Последние новости» в карточке базы знаний — из ленты, по тому же шаблону match.
+  function kbNews(k) {
+    if (!k.match) return "";
+    const n = state.kbFocus ? 8 : 3;
+    const seen = new Set();
+    const news = state.items.filter((it) => {
+      if (!kbFor(it).includes(k)) return false;
+      const key = it.group || it.id;
+      if (seen.has(key)) return false;
+      seen.add(key); return true;
+    }).slice(0, n);
+    if (!news.length) return "";
+    return `<h4>Последние новости</h4><ul class="kb-news">${news.map((it) =>
+      `<li><a href="${esc(safeUrl(it.link))}" target="_blank" rel="noopener noreferrer">${esc(it.title)}</a> <span class="muted">${esc(ago(it.published))}</span></li>`).join("")}</ul>` +
+      (!state.kbFocus ? `<a class="small kb-more" href="${esc(kbHref(k))}">Подробнее и больше новостей →</a>` : "");
   }
   $("kb-q").addEventListener("input", (e) => { state.kbQ = e.target.value; renderKb(); });
   $("kb-sections").addEventListener("click", (e) => {
@@ -445,7 +509,9 @@
     } else {
       $("list").innerHTML = `<li class="empty">Не удалось загрузить новости. Если вы открыли файл напрямую, запустите локальный сервер (см. README).</li>`;
     }
-    if (kb.status === "fulfilled") state.kb = kb.value;
+    if (kb.status === "fulfilled") { state.kb = kb.value; initKbMatchers(); }
+    const w = store.get("watch", "");
+    $("watch").value = w; setWatch(w);
     setTab(location.hash.slice(1) || "feed");
   }
   load();
