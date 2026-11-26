@@ -1,0 +1,41 @@
+name: Tests
+
+# Проверка каждого пул-реквеста и пуша: тесты сборщика и бота, линтер, данные сайта.
+# Секреты сюда не передаются — безопасно и для PR из чужих форков.
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "site/data/news.json"
+      - "state/**"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Lint (pyflakes)
+        run: |
+          python -m pip install --quiet pyflakes
+          python -m pyflakes scripts tests
+
+      - name: Python tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Site checks
+        run: |
+          node --check site/app.js
+          node tests/check_site.js

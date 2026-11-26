@@ -321,42 +321,6 @@ def _read_url(url: str) -> bytes:
     raise last_exc
 
 
-def _read_url(url: str) -> bytes:
-    req = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": USER_AGENT,
-            "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
-            "Accept-Encoding": "gzip, deflate",
-        },
-    )
-    last_exc: Exception | None = None
-    for attempt in range(2):
-        try:
-            with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-                raw = resp.read()
-                enc = (resp.headers.get("Content-Encoding") or "").lower()
-                if "gzip" in enc:
-                    raw = gzip.decompress(raw)
-                elif "deflate" in enc:
-                    try:
-                        raw = zlib.decompress(raw)
-                    except zlib.error:
-                        raw = zlib.decompress(raw, -zlib.MAX_WBITS)
-                return raw
-        except urllib.error.HTTPError as exc:
-            last_exc = exc
-            if exc.code < 500 or attempt == 1:
-                raise
-        except (urllib.error.URLError, TimeoutError, OSError) as exc:
-            last_exc = exc
-            if attempt == 1:
-                raise
-        time.sleep(1.5)
-    assert last_exc is not None
-    raise last_exc
-
-
 def fetch_source(src: dict) -> tuple[dict, list[dict]]:
     status = {"id": src["id"], "name": src["name"], "category": src["category"], "ok": False, "count": 0, "error": None,
               "weight": src.get("weight", 1), "family": src.get("family", src["id"])}

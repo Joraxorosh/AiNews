@@ -29,6 +29,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Если код сломан, сборка останавливается здесь: на сайте остаётся последняя рабочая версия.
+      - name: Tests
+        run: python -m unittest discover -s tests
+
       - name: Fetch news
         run: python scripts/fetch_news.py
 

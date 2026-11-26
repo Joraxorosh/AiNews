@@ -43,6 +43,15 @@ python -m http.server 8000 -d site    # открыть http://localhost:8000
 
 Если открыть `index.html` двойным кликом, браузер не даст загрузить JSON, поэтому нужен локальный сервер.
 
+## Тесты
+
+```bash
+python -m unittest discover -s tests   # сборщик и бот: чистка, склейка дублей, темы, рассылка
+node tests/check_site.js               # данные сайта: JSON, обзоры, шаблоны базы знаний
+```
+
+На GitHub они запускаются для каждого пул-реквеста и пуша (`.github/workflows/tests.yml`, без доступа к секретам), а также перед каждой публикацией: если тесты упали, сайт не обновится и останется последняя рабочая версия.
+
 ## Первая настройка GitHub Pages (один раз)
 
 1. **Settings → Pages → Build and deployment → Source: GitHub Actions**.
