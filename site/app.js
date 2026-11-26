@@ -22,6 +22,45 @@
     applyTheme(next); store.set("theme", next);
   });
 
+  // ---- Темы оформления (skin) — отдельно от светлой/тёмной схемы ----
+  // Чтобы добавить тему: запись сюда + блок :root[data-skin="…"] в styles.css (+ шрифты в index.html).
+  const SKINS = [
+    { id: "default", name: "Стандартная", desc: "Чистые карточки, цветные метки тем. Удобно для быстрого просмотра ленты." },
+    { id: "paper", name: "Газета", desc: "Бумажный фон, шрифты с засечками, шапка с датой выпуска, колонки и линейки. Главная новость — крупно." },
+  ];
+  const currentSkin = () => document.documentElement.dataset.skin || "default";
+  function applySkin(id) {
+    if (id === "default") delete document.documentElement.dataset.skin;
+    else { document.documentElement.dataset.skin = id; if (window.__loadSkinFonts) window.__loadSkinFonts(id); }
+    store.set("skin", id);
+  }
+  function renderThemes() {
+    const cur = currentSkin();
+    $("themes-list").innerHTML = SKINS.map((t) => `
+      <article class="theme-card${t.id === cur ? " on" : ""}">
+        <div class="preview preview-${esc(t.id)}" aria-hidden="true">
+          <div class="pv-mast">AI News</div>
+          <div class="pv-rule"></div>
+          <div class="pv-h">Вышла новая модель</div>
+          <div class="pv-line"></div><div class="pv-line short"></div>
+          <div class="pv-h">Уязвимость в популярной библиотеке</div>
+          <div class="pv-line"></div><div class="pv-line short"></div>
+        </div>
+        <h3>${esc(t.name)}</h3>
+        <p class="muted small">${esc(t.desc)}</p>
+        <button class="chip${t.id === cur ? " on" : ""}" data-skin="${esc(t.id)}" type="button">${t.id === cur ? "Выбрана ✓" : "Выбрать"}</button>
+      </article>`).join("");
+  }
+
+  // Дата выпуска для «газетной» шапки.
+  const ISSUE_START = Date.UTC(2026, 10, 25);   // 25 ноября 2026 — первый выпуск
+  function renderEdition() {
+    const now = new Date();
+    const date = now.toLocaleDateString("ru", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    const issue = Math.floor((now - ISSUE_START) / 86400e3) + 1;
+    $("edition").innerHTML = `<span>${esc(date[0].toUpperCase() + date.slice(1))}</span><span>Новости IT и искусственного интеллекта</span><span>Выпуск № ${issue}</span>`;
+  }
+
   // ---- Состояние ----
   const state = {
     tab: "feed", items: [], sources: {}, kb: null,
@@ -50,15 +89,23 @@
 
   // ---- Вкладки ----
   function setTab(tab) {
-    if (!["feed", "digest", "saved", "kb", ...Object.keys(CATS)].includes(tab)) tab = "feed";
+    if (!["feed", "digest", "saved", "kb", "themes", ...Object.keys(CATS)].includes(tab)) tab = "feed";
     state.tab = tab; state.shown = PAGE; state.tag = "";
     document.querySelectorAll("#tabs a").forEach((a) => a.classList.toggle("active", a.dataset.tab === tab));
-    $("news-view").hidden = tab === "kb" || tab === "digest";
+    $("news-view").hidden = ["kb", "digest", "themes"].includes(tab);
     $("kb-view").hidden = tab !== "kb";
     $("digest-view").hidden = tab !== "digest";
-    if (tab === "kb") renderKb(); else if (tab === "digest") renderDigest(); else { fillSources(); renderNews(); }
+    $("themes-view").hidden = tab !== "themes";
+    if (tab === "kb") renderKb();
+    else if (tab === "digest") renderDigest();
+    else if (tab === "themes") renderThemes();
+    else { fillSources(); renderNews(); }
   }
   window.addEventListener("hashchange", () => setTab(location.hash.slice(1)));
+  $("themes-list").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-skin]"); if (!b) return;
+    applySkin(b.dataset.skin); renderThemes();
+  });
 
   // ---- Новости ----
   function scopeItems() {
@@ -288,6 +335,7 @@
   }
 
   async function load() {
+    renderEdition();
     state.period = store.get("period", 7);
     state.digestDays = store.get("digestDays", 1) === 7 ? 7 : 1;
     $("period").value = String(state.period);

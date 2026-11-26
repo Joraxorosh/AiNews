@@ -7,6 +7,24 @@
   <meta name="description" content="Новости IT и ИИ: модели, инструменты, наука, безопасность — и база знаний.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234f46e5'/><text x='16' y='22' font-size='16' font-family='sans-serif' font-weight='700' text-anchor='middle' fill='white'>AI</text></svg>">
   <link rel="stylesheet" href="styles.css">
+  <script>
+    // Тема оформления применяется до отрисовки, чтобы страница не «мигала» стандартным видом.
+    (function () {
+      var FONTS = { paper: "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" };
+      var skin = null;
+      try { skin = JSON.parse(localStorage.getItem("skin")); } catch (e) { /* приватный режим */ }
+      // ?skin=paper в адресе — ссылка сразу на нужный вид (без сохранения выбора).
+      var m = /[?&]skin=([a-z]+)/.exec(location.search);
+      if (m && FONTS.hasOwnProperty(m[1]) || (m && m[1] === "default")) skin = m[1];
+      window.__loadSkinFonts = function (name) {
+        if (!FONTS[name] || document.getElementById("fonts-" + name)) return;
+        var l = document.createElement("link");
+        l.id = "fonts-" + name; l.rel = "stylesheet"; l.href = FONTS[name];
+        document.head.appendChild(l);
+      };
+      if (skin && skin !== "default") { document.documentElement.dataset.skin = skin; window.__loadSkinFonts(skin); }
+    })();
+  </script>
 </head>
 <body>
   <header class="top">
@@ -17,6 +35,7 @@
         <button id="theme-toggle" class="icon-btn" type="button" title="Сменить тему" aria-label="Сменить тему">◐</button>
       </div>
     </div>
+    <div class="wrap edition" id="edition"></div>
     <nav class="wrap tabs" id="tabs" aria-label="Разделы">
       <a href="#feed" data-tab="feed">Лента</a>
       <a href="#digest" data-tab="digest">Дайджест</a>
@@ -26,6 +45,7 @@
       <a href="#it" data-tab="it">IT и безопасность</a>
       <a href="#saved" data-tab="saved">Избранное</a>
       <a href="#kb" data-tab="kb">База знаний</a>
+      <a href="#themes" data-tab="themes">Оформление</a>
     </nav>
   </header>
 
@@ -61,6 +81,12 @@
       </div>
       <p id="digest-note" class="muted small"></p>
       <div id="digest-list"></div>
+    </section>
+
+    <!-- Оформление -->
+    <section id="themes-view" hidden>
+      <p class="muted small themes-note">Тема запоминается в этом браузере. Кнопка ◐ вверху переключает светлый и тёмный вариант в любой теме.</p>
+      <div id="themes-list" class="themes-grid"></div>
     </section>
 
     <!-- База знаний -->
