@@ -90,9 +90,14 @@
       tags,
       _pubMs: parseMs(raw.published),
       _seenMs: parseMs(raw.first_seen),
-      _search: (title + " " + summary).toLowerCase(),
+      _search: norm(title + " " + summary),
     };
   }
+
+  // ---- Поиск: все слова запроса в любом порядке, «ё» = «е», регистр не важен ----
+  const norm = (s) => String(s ?? "").toLowerCase().replace(/ё/g, "е");
+  const queryTerms = (q) => norm(q).split(/[\s,]+/).filter(Boolean);
+  const hasAll = (hay, terms) => terms.every((t) => hay.includes(t));
 
   function stripInternal(it) {
     const { _pubMs, _seenMs, _search, ...clean } = it;
@@ -238,9 +243,9 @@
       opts.map((s) => `<option value="${esc(s.id)}"${s.id === state.source ? " selected" : ""}>${esc(s.name)}</option>`).join("");
   }
 
-  function filtered(ignoreTag) {
-    const q = state.q.trim().toLowerCase();
-    const minMs = state.period && state.tab !== "saved" ? Date.now() - state.period * 86400e3 : 0;
+  function filtered(ignoreTag, ignorePeriod) {
+    const terms = queryTerms(state.q);
+    const minMs = state.period && state.tab !== "saved" && !ignorePeriod ? Date.now() - state.period * 86400e3 : 0;
     return scopeItems().filter((it) =>
       (!minMs || it._pubMs >= minMs) &&
       (!state.source || it.source === state.source) &&
@@ -248,7 +253,28 @@
       (!state.onlyWatch || isWatched(it)) &&
       (!state.hideRead || !isRead(it)) &&
       (ignoreTag || !state.tag || it.tags.includes(state.tag)) &&
-      (!q || it._search.includes(q)));
+      (!terms.length || hasAll(it._search, terms)));
+  }
+
+  // При поиске — подходящие записи базы знаний над лентой: по тексту записи или по её шаблону match
+  // («opus 5.5» найдёт Claude, хотя в тексте записи такой строки нет).
+  function kbForQuery() {
+    const terms = queryTerms(state.q);
+    if (!terms.length || !state.kb) return [];
+    const q = norm(state.q).trim();
+    const byName = (k) => terms.every((t) => norm(k.name).includes(t)) ? 0 : 1;
+    return state.kb.items.filter((k) => hasAll(k._search, terms) ||
+      kbMatchers.some((m) => m.item === k && m.rx.test(q)))
+      .sort((a, b) => byName(a) - byName(b)).slice(0, 4);
+  }
+  function renderKbHits() {
+    const hits = state.tab === "saved" ? [] : kbForQuery();
+    $("kb-hits").hidden = !hits.length;
+    $("kb-hits").innerHTML = hits.length ? `<div class="kb-hits-h small muted">В базе знаний</div>` + hits.map((k) => {
+      const sec = (state.kb.secTitles[k.section] || {}).title || "";
+      const sum = k.summary.length > 150 ? k.summary.slice(0, 150).replace(/\s+\S*$/, "") + "…" : k.summary;
+      return `<a class="kb-hit" href="${esc(kbHref(k))}"><b>${hl(k.name)}</b> <span class="muted small">${esc(sec)}</span><span class="kb-hit-sum">${hl(sum)}</span></a>`;
+    }).join("") : "";
   }
 
   function renderTags(base) {
@@ -311,13 +337,39 @@
   // ---- Мои темы: слова, которые подсвечиваются в ленте (хранятся в браузере) ----
   const reEsc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   let watchRx = null;
+  const wordsRx = (words) => words.map((w) => reEsc(w).replace(/[её]/gi, "[её]")).join("|");
   function setWatch(text) {
     state.watch = text.split(",").map((w) => w.trim()).filter(Boolean);
-    watchRx = state.watch.length ? new RegExp(state.watch.map((w) => reEsc(esc(w))).join("|"), "giu") : null;
+    watchRx = state.watch.length ? new RegExp(wordsRx(state.watch), "iu") : null;
   }
-  const isWatched = (it) => !!watchRx && state.watch.some((w) => it._search.includes(w.toLowerCase()));
-  // Подсветка по уже экранированному тексту: слова тоже экранированы, поэтому разметка не ломается.
-  const hl = (text) => (watchRx ? esc(text).replace(watchRx, (m) => `<mark>${m}</mark>`) : esc(text));
+  const isWatched = (it) => !!watchRx && state.watch.some((w) => it._search.includes(norm(w)));
+  // Подсветка: «Мои темы» — <mark>, слова поиска — <mark class="q">. Ищем по исходному тексту и экранируем
+  // кусочки по отдельности, чтобы совпадения не попадали внутрь &amp; и разметки.
+  let hlRx = null, hlKey = null;
+  function getHlRx() {
+    const terms = queryTerms(state.q);
+    const key = state.watch.join(",") + "\u0000" + terms.join(" ");
+    if (key !== hlKey) {
+      hlKey = key;
+      const parts = [];
+      if (state.watch.length) parts.push(`(?<w>${wordsRx(state.watch)})`);
+      if (terms.length) parts.push(`(?<q>${wordsRx(terms)})`);
+      hlRx = parts.length ? new RegExp(parts.join("|"), "giu") : null;
+    }
+    return hlRx;
+  }
+  function hl(text) {
+    const rx = getHlRx();
+    text = String(text ?? "");
+    if (!rx) return esc(text);
+    let out = "", last = 0;
+    for (const m of text.matchAll(rx)) {
+      if (!m[0]) continue;
+      out += esc(text.slice(last, m.index)) + (m.groups.w ? "<mark>" : `<mark class="q">`) + esc(m[0]) + "</mark>";
+      last = m.index + m[0].length;
+    }
+    return out + esc(text.slice(last));
+  }
 
   const MAX_TAGS = 3;
   function hnMeta(it) {
@@ -384,6 +436,7 @@
       $("more").hidden = true;
       return;
     }
+    renderKbHits();
     const base = filtered(true);
     if (state.tag && !base.some((it) => it.tags.includes(state.tag))) state.tag = "";
     renderTags(base);
@@ -397,11 +450,22 @@
       (merged ? ` · склеено дублей: ${merged}` : "") +
       (newN && !state.onlyNew ? ` · ${newN} ${plural(newN, "новая", "новые", "новых")} с прошлого визита` : "") +
       (watchN && !state.onlyWatch ? ` · ${watchN} по моим темам` : "");
+    // Поиск ограничен периодом — подскажем, сколько найдётся за всё время.
+    let wider = 0;
+    if (queryTerms(state.q).length && state.period && state.tab !== "saved") {
+      wider = groupItems(filtered(false, true)).length - groups.length;
+    }
+    $("search-wider").hidden = wider <= 0;
+    if (wider > 0) $("search-wider").innerHTML = `Ещё ${wider} ${plural(wider, "запись", "записи", "записей")} за всё время — <button type="button" class="linkish" id="search-all">показать</button>`;
     $("list").innerHTML = groups.length
       ? feedHtml(groups, 0, state.shown)
       : `<li class="empty">${state.tab === "saved" ? "Пока пусто — отмечайте новости звёздочкой ☆" : "Ничего не найдено. Попробуйте расширить период или сбросить фильтры."}</li>`;
     $("more").hidden = groups.length <= state.shown;
   }
+  $("search-wider").addEventListener("click", (e) => {
+    if (e.target.id !== "search-all") return;
+    state.period = 0; $("period").value = "0"; state.shown = PAGE; renderNews();   // без сохранения: только для этого поиска
+  });
 
   // «Показать ещё» дописывает карточки в конец, не перестраивая весь список.
   function showMore() {
@@ -692,7 +756,7 @@
         it.name, it.vendor, it.summary, it.best_for,
         ...(it.pros || []), ...(it.cons || []),
         ...(it.links || []).map((l) => l.title),
-      ].filter(Boolean).join(" ").toLowerCase(),
+      ].filter(Boolean).join(" ").replace(/ё/gi, "е").toLowerCase(),
     }));
     return { ...kb, secTitles, items };
   }
@@ -703,12 +767,16 @@
     $("kb-sections").innerHTML = [{ id: "", title: "Все" }, ...kb.sections].map((s) =>
       `<button class="chip${s.id === state.kbSection ? " on" : ""}" data-sec="${esc(s.id)}" type="button" aria-pressed="${s.id === state.kbSection}">${esc(s.title)}</button>`).join("");
     $("kb-note").textContent = `Обновлено: ${kb.updated}. ${kb.note || ""}`;
-    const q = state.kbQ.trim().toLowerCase();
+    const terms = queryTerms(state.kbQ);
     $("kb-focus").hidden = !state.kbFocus;
     $("kb-list").classList.toggle("focus", !!state.kbFocus);
     const items = state.kbFocus ? kb.items.filter((it) => it.name === state.kbFocus) : kb.items.filter((it) =>
       (!state.kbSection || it.section === state.kbSection) &&
-      (!q || it._search.includes(q)));
+      (!terms.length || hasAll(it._search, terms)));
+    // Тот же запрос в ленте новостей — одной ссылкой.
+    const nNews = terms.length && !state.kbFocus ? groupItems(state.items.filter((it) => hasAll(it._search, terms))).length : 0;
+    $("kb-feed-link").hidden = !nNews;
+    if (nNews) $("kb-feed-link").innerHTML = `<a href="#feed" data-search="${esc(state.kbQ.trim())}">В ленте новостей: ${nNews} ${plural(nNews, "сюжет", "сюжета", "сюжетов")} по запросу «${esc(state.kbQ.trim())}» →</a>`;
     $("kb-list").innerHTML = items.length ? items.map((it) => {
       const sec = kb.secTitles[it.section] || {};
       const list = (arr, cls) => (arr && arr.length ? `<ul class="${cls}">${arr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "");
@@ -744,6 +812,11 @@
     clearTimeout(kbSearchTimer);
     if (!state.kbQ) renderKb();
     else kbSearchTimer = setTimeout(renderKb, 120);
+  });
+  $("kb-feed-link").addEventListener("click", (e) => {
+    const a = e.target.closest("[data-search]"); if (!a) return;
+    state.q = a.dataset.search; $("q").value = state.q;
+    state.period = 0; $("period").value = "0";   // в ссылке посчитано за всё время
   });
   $("kb-sections").addEventListener("click", (e) => {
     const b = e.target.closest("[data-sec]"); if (!b) return;

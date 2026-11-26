@@ -73,7 +73,7 @@
     <!-- Новости -->
     <section id="news-view">
       <div class="filters">
-        <input id="q" type="search" placeholder="Поиск по заголовкам и описаниям…  ( / )" autocomplete="off">
+        <input id="q" type="search" placeholder="Поиск по новостям и базе знаний…  ( / )" autocomplete="off">
         <select id="period" aria-label="Период">
           <option value="1">24 часа</option>
           <option value="3">3 дня</option>
@@ -90,8 +90,10 @@
         <input id="watch" type="text" placeholder="через запятую: Claude Code, GigaChat, уязвимость" autocomplete="off">
         <label class="check"><input type="checkbox" id="only-watch"> только они</label>
       </div>
+      <div id="kb-hits" class="kb-hits" hidden></div>
       <div id="tag-bar" class="tag-bar"></div>
       <p id="count" class="muted small"></p>
+      <p id="search-wider" class="small search-wider" hidden></p>
       <ol id="list" class="list"></ol>
       <button id="more" class="more" type="button" hidden>Показать ещё</button>
     </section>
@@ -125,6 +127,7 @@
       <div id="kb-sections" class="tag-bar"></div>
       <p id="kb-focus" class="small" hidden><a href="#kb">← Вся база знаний</a></p>
       <p id="kb-note" class="muted small"></p>
+      <p id="kb-feed-link" class="small" hidden></p>
       <div id="kb-list" class="kb-grid"></div>
     </section>
   </main>
