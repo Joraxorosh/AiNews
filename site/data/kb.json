@@ -55,7 +55,7 @@
           "url": "https://www.anthropic.com/news"
         }
       ],
-      "match": "claude(?! ?code)(?! agent sdk)(?! ship)|(?:opus|sonnet|haiku|fable) 5[\\d.]*|claude mythos"
+      "match": "claude(?! ?code)(?! agent sdk)(?! ship)|(?:opus|sonnet|haiku|fable|mythos) [45][\\d.]*|claude mythos"
     },
     {
       "section": "models",
@@ -88,7 +88,10 @@
           "url": "https://openai.com/news/"
         }
       ],
-      "match": "gpt-?\\d[\\w.]*|chatgpt"
+      "match": "gpt-?\\d[\\w.]*|gpt-(?:image|realtime|live|rosalind)[\\w.-]*|chatgpt",
+      "unverified": [
+        "«Отдельной o-серии больше нет»: на странице моделей OpenAI o-модели среди актуальных не показаны, но прямого официального заявления о закрытии серии не найдено"
+      ]
     },
     {
       "section": "models",
@@ -102,8 +105,8 @@
         "Дешёвые уровни Flash и Flash-Lite подходят для массовых задач"
       ],
       "cons": [
-        "Доступ разный: Hydrogen открыта всем; Carbon и Neon в API — только на платном тарифе, в приложении Gemini Carbon — только с подпиской Ultra (на 26.11.2026)",
-        "Статус Argon неясен: в блоге Google она доступна только защитникам из программы Fairwind, а в AI Studio значится без ограничений",
+        "Доступ разный: Hydrogen есть и на бесплатном тарифе API; Argon, Neon и Carbon в API — только на платном тарифе; в приложении Gemini Argon и Neon — с подпиской Pro или Ultra, Carbon — только Ultra (на 26.11.2026)",
+        "Версии без киберограничений (например, Carbon for cyber) выдают только защитникам из программы Fairwind",
         "Модели быстро устаревают: например, запросы к Gemini 2.5 Pro и 2.5 Flash с 1 декабря 2026 перенаправляются на новые модели",
         "Поведение заметно различается между версиями, после смены модели нужны регрессионные тесты"
       ],
@@ -126,13 +129,16 @@
           "url": "https://blog.google/innovation-and-ai/models-and-research/google-deepmind/genie-4-now-available-project-genie/"
         }
       ],
-      "match": "gemini(?! cli)|nano banana"
+      "match": "gemini(?! cli)|nano banana|genie \\d",
+      "unverified": [
+        "Доступность Hydrogen на бесплатном тарифе API подтверждена только сторонними обзорами, официальный пост Google не найден"
+      ]
     },
     {
       "section": "models",
       "name": "Grok",
       "vendor": "xAI · проприетарная",
-      "summary": "Модели xAI. Флагман Grok 4.7 (контекст 500K) рекомендован для кода и чата и работает в агенте Grok Build. Линейка Grok 4.20 даёт контекст 1M и отдельные варианты: с рассуждениями, без них и мультиагентный. Есть также Grok Imagine для изображений и видео и grok-voice для голоса.",
+      "summary": "Модели xAI. Флагман Grok 4.7 (сентябрь 2026, контекст 500K) рекомендован для кода и работы со знаниями, доступен в агенте Grok Build, Cursor и API. Grok 4.3 и линейка Grok 4.20 дают контекст 1M, у 4.20 есть варианты с рассуждениями, без них и мультиагентный. Есть также Grok Imagine (изображения 2.0, видео 1.5) и grok-voice для голоса.",
       "pros": [
         "API совместим с OpenAI SDK: перейти можно, поменяв base_url",
         "Grok 4.7 заметно сильнее в коде, чем 4.6, и доступен в Cursor и Grok Build",
@@ -153,24 +159,33 @@
         {
           "title": "Документация",
           "url": "https://docs.x.ai/docs/overview"
+        },
+        {
+          "title": "Grok 4.7",
+          "url": "https://x.ai/news/grok-4-7"
         }
       ],
-      "match": "grok"
+      "match": "grok(?!king)",
+      "unverified": [
+        "Совместимость API с OpenAI SDK (смена base_url) не перепроверена в текущей документации",
+        "Инцидент с утечкой данных через Grok Build подтверждён только СМИ (The Hacker News, eWeek и др.), официального бюллетеня xAI нет; «несанкционированные действия бота» не перепроверялись"
+      ]
     },
     {
       "section": "models",
       "name": "Muse",
       "vendor": "Meta · проприетарная",
-      "summary": "Закрытые модели Meta Superintelligence Labs. Их не стоит путать с открытыми Llama. Muse Wonder — самая сильная модель Meta, для агентных задач и кода, доступна через Meta Model API и Muse Code. Muse Wonder Full — расширенная версия, пока только для подписчиков Muse Code. Muse Spark 1.1 — мультимодальная reasoning-модель с контекстом 1M, она же работает в режиме Thinking в Meta AI.",
+      "summary": "Закрытые модели Meta Superintelligence Labs. Их не стоит путать с открытыми моделями Meta (Llama, Muse Glimmer, Muse Spark Open). Muse Wonder — самая сильная модель Meta, для агентных задач, кода и computer use, доступна через Meta Model API и Muse Code. Muse Wonder Full — расширенная версия, пока только для подписчиков Muse Code. Линейка Muse Spark обновляется: Spark 1.1 — мультимодальная reasoning-модель с контекстом 1M (она же в режиме Thinking в Meta AI), Spark 1.3 (сентябрь 2026) — для долгих задач по коду и агентной работы. Muse Ember — самая маленькая и экономичная, контекст 1M.",
       "pros": [
         "Ориентированы на агентную работу: оркестрация субагентов, computer use, MCP и инструменты",
-        "Контекст 1M токенов у Muse Spark 1.1, на вход принимает изображения и аудио",
-        "Ещё одна frontier-альтернатива крупной компании, помимо OpenAI, Anthropic и Google"
+        "Контекст 1M токенов у Muse Spark 1.1 и Muse Ember; принимают изображения и аудио, Ember — ещё и видео",
+        "Ещё одна frontier-альтернатива крупной компании, помимо OpenAI, Anthropic и Google",
+        "Muse Ember доступна не только в Meta Model API, но и через OpenRouter и Google Cloud"
       ],
       "cons": [
         "Модели новые: API запущен в 2026 году как public preview, экосистема и опыт использования в продакшене пока небольшие",
         "Старшая модель Muse Wonder Full недоступна через API",
-        "Весов нет, хотя Meta делает и открытые Llama"
+        "Весов закрытых Muse нет; открытые модели Meta (Muse Glimmer, Muse Spark Open) — отдельная история, см. запись Llama"
       ],
       "best_for": "Эксперименты с агентами и мультимодальностью, когда нужна альтернатива основным API-провайдерам.",
       "links": [
@@ -181,25 +196,38 @@
         {
           "title": "Muse Spark 1.1 и Meta Model API",
           "url": "https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/"
+        },
+        {
+          "title": "Muse Spark 1.3",
+          "url": "https://research.meta.ai/blog/introducing-muse-spark-1-3"
+        },
+        {
+          "title": "Модели Meta",
+          "url": "https://dev.meta.ai/models/"
         }
       ],
-      "match": "muse (?:spark|wonder|glimmer|ai)|meta muse"
+      "match": "muse (?:spark(?! open)|wonder|ember|code|ai)|meta muse",
+      "unverified": [
+        "Статус Meta Model API как public preview на сегодня не перепроверен (официально подтверждён только запуск в preview вместе с Spark 1.1)",
+        "Какая версия Spark сейчас работает в режиме Thinking в Meta AI (1.1 или новее) — не подтверждено"
+      ]
     },
     {
       "section": "models",
       "name": "Llama",
       "vendor": "Meta · открытые веса (линейки Llama и Muse)",
-      "summary": "Последний релиз под брендом Llama — Llama 4 (Scout и Maverick, MoE, весна 2025, лицензия Llama 4 Community License). С 2026 года открытые модели Meta выходят под именем Muse: Muse Glimmer 30B (плотная, текст+изображения+видео, Apache 2.0, август 2026) и Muse Spark Open 816B-A42B (MoE, контекст 1M, октябрь 2026, собственная Muse Model License).",
+      "summary": "Последний релиз под брендом Llama — Llama 4 (Scout и Maverick, MoE, апрель 2025, лицензия Llama 4 Community License). Новые открытые модели Meta выходят под именем Muse: Muse Glimmer 30B (плотная, текст и изображения, контекст 128K, Apache 2.0, август 2026) и Muse Spark Open 816B-A42B (MoE, мультимодальная, контекст 1M, 15 октября 2026, собственная Muse Model License).",
       "pros": [
-        "Muse Glimmer 30B под Apache 2.0 — первая модель Meta с действительно разрешительной лицензией; есть GGUF-версия для llama.cpp",
-        "Glimmer помещается на одну мощную видеокарту в квантованном виде, ориентирована на локальных кодовых агентов",
-        "Muse Spark Open — большая мультимодальная модель (текст, изображения, видео, аудио на входе) с контекстом 1M",
-        "Огромная экосистема fine-tune-версий и поддержка в Ollama, LM Studio, vLLM"
+        "Muse Glimmer 30B под Apache 2.0 — первая модель Meta с действительно разрешительной лицензией; есть GGUF- и ExecuTorch-версии",
+        "Glimmer в 4-битном виде занимает меньше 20 ГБ и работает на MacBook или RTX 5090 — сделана для локальных агентов",
+        "Muse Spark Open — большая мультимодальная модель с контекстом 1M, есть версия в NVFP4",
+        "Огромная экосистема fine-tune-версий Llama и поддержка в Ollama, LM Studio, vLLM"
       ],
       "cons": [
-        "Muse Spark Open требует заметной атрибуции «Built with Muse Spark Open» и отдельного договора для MaaS у крупных компаний",
+        "Muse Spark Open — не open source: лицензия с ограниченными коммерческими условиями (заметная надпись «Built with Muse Spark Open», отдельный договор для крупных MaaS-сервисов)",
         "Llama 4 тоже под ограничительной лицензией, это не классический open source",
         "Muse Spark Open на 816B параметров для локального запуска практически недоступна",
+        "Glimmer понимает только текст и изображения, без видео и аудио",
         "Качество на русском официально не заявлено — проверяйте на своих задачах"
       ],
       "best_for": "Muse Glimmer — локальный агент или self-hosted модель среднего размера с чистой лицензией Apache 2.0.",
@@ -213,17 +241,28 @@
           "url": "https://huggingface.co/blog/muse-glimmer"
         },
         {
+          "title": "Muse Glimmer 30B — карточка модели",
+          "url": "https://huggingface.co/meta-models/Muse-Glimmer-30B"
+        },
+        {
+          "title": "Muse Spark Open — блог Meta",
+          "url": "https://research.meta.ai/blog/muse-spark-open"
+        },
+        {
           "title": "Muse Spark Open — карточка модели",
           "url": "https://huggingface.co/meta-models/Muse-Spark-Open-816B-A42B"
         }
       ],
-      "match": "llama(?!\\.cpp|index| ?stack|-server)"
+      "match": "llama(?:[- ]?\\d[\\w.]*)?(?!\\.cpp|index| ?stack|-server)|muse glimmer|muse spark open",
+      "unverified": [
+        "Условия Muse Model License (надпись «Built with Muse Spark Open», отдельный договор для MaaS выше порога выручки) и вход видео/аудио у Muse Spark Open подтверждены только вторичными источниками: карточка и лицензия на Hugging Face закрыты (gated), официальный блог Meta пишет лишь «limited commercial terms» и «natively multimodal»"
+      ]
     },
     {
       "section": "models",
       "name": "Qwen",
       "vendor": "Alibaba · открытые веса",
-      "summary": "Самая широкая линейка открытых моделей: от 0.8B до 2.4T параметров. Актуальное поколение — Qwen3.8 (август 2026): плотная мультимодальная Qwen3.8-27B (Apache 2.0, контекст 262K, до 1M с YaRN), MoE Qwen3.8-Flash-Next (~180B) и флагман Qwen3.8-2.4T-A95B; маленькие модели — в Qwen3.5/3.6 (0.8B–9B, 27B, 35B-A3B).",
+      "summary": "Самая широкая линейка открытых моделей: от 0.8B до 2.4T параметров. Актуальное поколение — Qwen3.8 (август 2026): плотная мультимодальная Qwen3.8-27B (Apache 2.0, контекст 262K, до 1M), MoE Qwen3.8-Flash-Next (125B, 6B активных, всего около 180B с n-gram-эмбеддингами; превью архитектуры Qwen4) и флагман Qwen3.8-2.4T-A95B; маленькие модели — в Qwen3.5/3.6 (0.8B–9B, 27B, 35B-A3B).",
       "pros": [
         "Есть размер под любое железо: 0.8B–9B для ноутбука, 27B и 35B-A3B для одной видеокарты",
         "Qwen3.8-27B под Apache 2.0, понимает изображения и видео, режим рассуждений отключается",
@@ -231,7 +270,8 @@
         "Qwen3.6-35B-A3B доступна и в Yandex AI Studio — удобно для пользователей из России"
       ],
       "cons": [
-        "Флагман Qwen3.8-2.4T-A95B — под отдельной лицензией qwen3.8-max, без мультимодальности (в отличие от облачной Qwen3.8-Max)",
+        "Не всё под Apache 2.0: Qwen3.8-Flash-Next — под лицензией Qwen Community, флагман 2.4T-A95B — под отдельной лицензией qwen3.8-max",
+        "Флагман 2.4T-A95B — только текст и всегда с рассуждениями (в отличие от облачной Qwen3.8-Max)",
         "Возможны ограничения в политически чувствительных темах",
         "Качество на русском ниже, чем на английском и китайском"
       ],
@@ -256,10 +296,10 @@
       "section": "models",
       "name": "DeepSeek",
       "vendor": "DeepSeek · открытые веса",
-      "summary": "Большие MoE-модели с открытыми весами под MIT. Актуальная линейка — DeepSeek-V4: V4.1-Flash (октябрь 2026, ~552B, 8–16B активных параметров, контекст 1M, настраиваемая глубина рассуждений) и V4-Pro (~1.6T, 49B активных); есть экспериментальная V4-Flash-Vision-Exp.",
+      "summary": "Большие MoE-модели с открытыми весами под MIT. Актуальная модель — DeepSeek-V4.1-Flash (10 сентября 2026, в октябре — обновление V4.1-Flash-1017): 552B параметров основы плюс модуль памяти Engram, 8–16B активных, контекст 1M, понимает изображения, глубина рассуждений настраивается. Предыдущая V4-Pro (1.6T, 49B активных) тоже открыта, но в API DeepSeek её заменила V4.1-Flash до выхода V4.1-Pro; есть экспериментальная V4-Flash-Vision-Exp.",
       "pros": [
         "Лицензия MIT на веса — без ограничений на коммерческое использование",
-        "Контекст до 1M токенов и компактный KV-кэш у V4.1-Flash",
+        "Контекст до 1M токенов и очень компактный KV-кэш у V4.1-Flash",
         "Сильные результаты в коде, математике и агентных задачах",
         "DeepSeek V4.1 Flash доступна в Yandex AI Studio — можно работать из России без зарубежного API"
       ],
@@ -275,6 +315,10 @@
           "url": "https://huggingface.co/deepseek-ai"
         },
         {
+          "title": "Анонс DeepSeek-V4.1-Flash",
+          "url": "https://api-docs.deepseek.com/news/news260910"
+        },
+        {
           "title": "DeepSeek-V4.1-Flash — карточка модели",
           "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash"
         }
@@ -285,15 +329,17 @@
       "section": "models",
       "name": "Mistral",
       "vendor": "Mistral AI (Франция) · открытые и коммерческие",
-      "summary": "Европейский разработчик с открытыми моделями всех размеров. Маленькие Ministral 3 (3B, 8B, 14B) и Mistral Large 3 (675B MoE) — под Apache 2.0; Mistral Small 4 (119B MoE, 6B активных, мультимодальная, с рассуждениями) — тоже Apache 2.0; флагман Mistral Large 4 (~1T, MoE, мультимодальный) открыт в октябре 2026 под Mistral Ecosystem Open-Weight License.",
+      "summary": "Европейский разработчик с открытыми моделями всех размеров. Под Apache 2.0 — Ministral 3 (3B, 8B, 14B), Mistral Large 3 (675B MoE) и Mistral Small 4 (119B MoE, 6B активных, мультимодальная, с рассуждениями). Mistral Medium 3.5 (128B, плотная, контекст 256K, март 2026) — под модифицированной MIT. Флагман Mistral Large 4 (~1T MoE, 49B активных, текст и изображения, контекст 1M) открыт в октябре 2026 под Mistral Ecosystem Open-Weight License.",
       "pros": [
         "Ministral 3 на 3–14B хорошо подходят для локального запуска и устройств",
-        "Большинство моделей под Apache 2.0",
+        "Маленькие и средние модели (Ministral 3, Small 4, Large 3) — под Apache 2.0",
+        "Русский язык есть в списке поддерживаемых у Large 4 и Medium 3.5",
         "Европейская юрисдикция, важно для GDPR",
-        "Есть открытый флагман уровня ~1T параметров"
+        "Есть открытый флагман уровня ~1T параметров с контекстом 1M"
       ],
       "cons": [
         "Лицензия Large 4 — модифицированная MIT: компаниям, продающим модель как сервис (MaaS), нужна отдельная коммерческая лицензия",
+        "Medium 3.5 нельзя использовать без отдельной лицензии компаниям с выручкой больше $20 млн в месяц",
         "Small 4, несмотря на название, требует серверного железа (несколько H100)",
         "Экосистема меньше, чем у Qwen и Llama"
       ],
@@ -302,6 +348,10 @@
         {
           "title": "Mistral Large 4 — открытые веса",
           "url": "https://mistral.ai/news/mistral-large-4-oss/"
+        },
+        {
+          "title": "Mistral Medium 3.5 — карточка модели",
+          "url": "https://huggingface.co/mistralai/Mistral-Medium-3.5-128B"
         },
         {
           "title": "Mistral Small 4",
@@ -316,18 +366,19 @@
           "url": "https://docs.mistral.ai/"
         }
       ],
-      "match": "mistral|ministral|magistral|devstral"
+      "match": "mistral(?:ai)?|ministral|magistral|devstral|codestral|pixtral|voxtral|leanstral"
     },
     {
       "section": "models",
       "name": "Gemma",
       "vendor": "Google · открытые веса",
-      "summary": "Открытые модели Google на базе технологий Gemini. Gemma 4 (апрель 2026, Apache 2.0): E2B и E4B для устройств, 12B, 26B-A4B (MoE) и 31B (плотная); все понимают изображения и видео, младшие — ещё и аудио.",
+      "summary": "Открытые модели Google на базе технологий Gemini. Gemma 4 (апрель 2026, Apache 2.0): E2B и E4B для устройств, 26B-A4B (MoE) и 31B (плотная); в мае добавлена 12B. Все понимают изображения и видео, E2B, E4B и 12B — ещё и аудио.",
       "pros": [
         "Лицензия Apache 2.0 — с Gemma 4 Google отказалась от собственных ограничительных условий",
-        "Отличный выбор для локального запуска: E2B/E4B работают на телефонах и Raspberry Pi, 26B/31B в квантованном виде — на игровой видеокарте",
-        "Обучена на 140+ языках, мультимодальная из коробки",
-        "Контекст 128K у младших и до 256K у старших моделей"
+        "Отличный выбор для локального запуска: E2B/E4B работают на телефонах и Raspberry Pi, 12B/26B/31B в квантованном виде — на игровой видеокарте",
+        "Есть официальные квантованные QAT-версии (в т.ч. GGUF и для мобильных)",
+        "Обучена на 140+ языках (35+ поддерживаются из коробки), мультимодальная",
+        "Контекст 128K у E2B/E4B и 256K у 12B, 26B и 31B"
       ],
       "cons": [
         "Максимальный размер 31B — на сложных задачах уступает большим открытым MoE-моделям",
@@ -340,17 +391,21 @@
           "url": "https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/"
         },
         {
+          "title": "Gemma 4 12B — карточка модели",
+          "url": "https://huggingface.co/google/gemma-4-12B-it"
+        },
+        {
           "title": "Hugging Face (google)",
           "url": "https://huggingface.co/google"
         }
       ],
-      "match": "gemma[\\w.-]*"
+      "match": "[a-z]*gemma[\\w.-]*"
     },
     {
       "section": "models",
       "name": "Kimi",
       "vendor": "Moonshot AI (Китай) · открытые веса",
-      "summary": "Сверхбольшие MoE-модели для агентной работы и длинных задач по коду. Kimi K3 (июль 2026) — 2.8T параметров, 104B активных, контекст 1M, понимает изображения; позже вышла Kimi-K3.1-Pro. Предыдущее поколение K2.x — около 1T параметров.",
+      "summary": "Сверхбольшие MoE-модели для агентной работы и длинных задач по коду. Kimi K3 (июль 2026) — 2.8T параметров, 104B активных, контекст 1M, понимает изображения и видео. 2 ноября 2026 вышла Kimi K3.1-Pro — тот же размер, дообучена с RL, сильнее в коде и фактах. Предыдущее поколение K2.x — около 1T параметров.",
       "pros": [
         "Одна из сильнейших открытых моделей для кода и долгих агентных сценариев",
         "Обучение с учётом квантизации (MXFP4) — веса меньше, чем можно ожидать от 2.8T",
@@ -358,7 +413,7 @@
       ],
       "cons": [
         "Локально не запустить: нужен большой GPU-кластер",
-        "Собственная лицензия Kimi K3 License: MIT-подобная, но с отдельным договором для MaaS при выручке выше порога и обязательной атрибуцией для очень крупных продуктов"
+        "Собственные лицензии Kimi K3 / K3.1-Pro: MIT-подобные, но с отдельным договором для MaaS при выручке выше порога и обязательной надписью с названием модели в очень крупных продуктах"
       ],
       "best_for": "Команды с собственной GPU-инфраструктурой, которым нужна открытая модель фронтир-уровня для агентов и кода.",
       "links": [
@@ -367,26 +422,30 @@
           "url": "https://huggingface.co/moonshotai"
         },
         {
+          "title": "Kimi K3.1-Pro — карточка модели",
+          "url": "https://huggingface.co/moonshotai/Kimi-K3.1-Pro"
+        },
+        {
           "title": "Kimi K3 — карточка модели",
           "url": "https://huggingface.co/moonshotai/Kimi-K3"
         }
       ],
-      "match": "kimi[\\w.-]*|moonshot ai"
+      "match": "kimi[\\w.-]*|moonshot ?ai"
     },
     {
       "section": "models",
       "name": "GLM",
       "vendor": "Z.ai (Zhipu, Китай) · открытые веса",
-      "summary": "Линейка больших MoE-моделей с упором на программирование и агентные задачи. Открыты GLM-5, GLM-5.2 (MIT) и GLM-5.3 (~753B, октябрь 2026, собственная лицензия) плюс мультимодальная GLM-5.3-Flash (~321B); новейшая GLM-5.4 пока доступна только через сервисы Z.ai, веса обещаны позже.",
+      "summary": "Линейка больших MoE-моделей с упором на программирование и агентные задачи. Открыты GLM-5, 5.1 и 5.2 (MIT), GLM-5.3 (~753B, август 2026, собственная лицензия) и мультимодальная GLM-5.3-Flash (~320B, 18B активных, MIT). Новейшая GLM-5.4 (23 ноября 2026) пока доступна только в сервисах Z.ai, веса обещаны после доработки безопасности.",
       "pros": [
         "Сильные результаты в коде и долгих агентных задачах среди открытых моделей",
-        "GLM-5 и 5.2 — под MIT",
-        "Есть маленькие специализированные модели (GLM-OCR 1B, GLM-4.1V-9B-Thinking)"
+        "GLM-5, 5.1, 5.2 и 5.3-Flash — под MIT",
+        "Есть модели поменьше: GLM-4.7-Flash (~30B, MIT), GLM-OCR, GLM-4.1V-9B-Thinking"
       ],
       "cons": [
-        "GLM-5.3 ушла с MIT на собственную лицензию с условиями для очень крупных компаний",
+        "GLM-5.3 ушла с MIT на собственную лицензию: очень крупным MaaS-провайдерам нужно пройти проверку безопасности Z.ai",
         "Основные модели — сотни миллиардов параметров, нужен сервер",
-        "Даже «Flash»-версия большая (~321B), лёгкой модели для ноутбука в актуальном поколении нет"
+        "Даже «Flash»-версия актуального поколения большая (~320B), лёгкой модели для ноутбука в нём нет"
       ],
       "best_for": "Self-hosted кодовый агент на серверных GPU, когда нужна альтернатива DeepSeek и Kimi.",
       "links": [
@@ -397,15 +456,22 @@
         {
           "title": "GLM-5.3 — карточка модели",
           "url": "https://huggingface.co/zai-org/GLM-5.3"
+        },
+        {
+          "title": "GLM-5.3-Flash — карточка модели",
+          "url": "https://huggingface.co/zai-org/GLM-5.3-Flash"
         }
       ],
-      "match": "glm-?\\d[\\w.]*|z\\.ai|zhipu"
+      "match": "glm[- ]?\\d[\\w.]*|z\\.ai|zhipu",
+      "unverified": [
+        "Дата и статус GLM-5.4 (23.11.2026, веса после доработки безопасности) — по вторичным источникам: официальная страница docs.z.ai/guides/llm/glm-5.4 существует, но закрыта от автоматической загрузки (403), блог z.ai/blog/glm-5.4 отдаётся пустым"
+      ]
     },
     {
       "section": "models",
       "name": "gpt-oss",
       "vendor": "OpenAI · открытые веса",
-      "summary": "Единственные открытые языковые модели OpenAI со времён GPT-2: gpt-oss-120b (117B, MoE) и gpt-oss-20b (21B, 3.6B активных), август 2025, Apache 2.0. Reasoning-модели с тремя уровнями рассуждений и встроенным вызовом инструментов; позже вышли gpt-oss-safeguard для модерации.",
+      "summary": "Единственные открытые языковые модели OpenAI со времён GPT-2: gpt-oss-120b (117B, 5.1B активных) и gpt-oss-20b (21B, 3.6B активных), август 2025, Apache 2.0. Reasoning-модели с тремя уровнями рассуждений и встроенным вызовом инструментов; позже вышли gpt-oss-safeguard для модерации и маленький Privacy Filter для поиска персональных данных в тексте.",
       "pros": [
         "gpt-oss-20b работает в 16 ГБ памяти — реальный вариант для ноутбука",
         "gpt-oss-120b помещается на одну GPU с 80 ГБ",
@@ -434,9 +500,10 @@
       "section": "models",
       "name": "Nemotron",
       "vendor": "NVIDIA · открытые веса и данные",
-      "summary": "Открытые модели NVIDIA с гибридной архитектурой Mamba-Transformer + MoE. Nemotron 3.5 (2026): Lightning 30B-A3B (только текст) и Super 120B-A12B (текст, изображения, видео), контекст до 1M, лицензия OpenMDW-1.1; вместе с весами публикуются датасеты и рецепты обучения.",
+      "summary": "Открытые модели NVIDIA с гибридной архитектурой Mamba-Transformer + MoE. Поколение Nemotron 3.5 (август–октябрь 2026): Lightning 30B-A3B (только текст), Super VL 120B-A12B (текст, изображения, видео) с контекстом до 1M и Bolt 74B-A9B (текст, изображения, видео, контекст 256K) с 2-битной версией на 24 ГБ для локального запуска. Лицензия OpenMDW-1.1; вместе с весами публикуются датасеты и рецепты обучения.",
       "pros": [
         "Lightning разворачивается на одной GPU 80 ГБ и очень быстрая за счёт гибридной архитектуры",
+        "Bolt 74B-A9B в 24-гигабайтной версии рассчитана на локальных агентов, есть GGUF для llama.cpp",
         "Открыты не только веса, но и данные для дообучения и рецепты — редкость",
         "Готовые NVFP4-версии и драфтеры для спекулятивного декодирования",
         "Разрешено коммерческое использование"
@@ -444,6 +511,7 @@
       "cons": [
         "Русский язык не входит в список поддерживаемых",
         "Оптимизированы под железо NVIDIA, лучшие форматы (NVFP4) — для свежих GPU",
+        "Super VL в BF16 требует нескольких H100",
         "Слабее лидеров среди больших открытых моделей"
       ],
       "best_for": "Быстрые агентные пайплайны на GPU NVIDIA и эксперименты с дообучением на открытых данных.",
@@ -453,26 +521,30 @@
           "url": "https://research.nvidia.com/labs/nemotron/Nemotron-3.5-Super-and-Lightning/"
         },
         {
+          "title": "Nemotron 3.5 Bolt 24GB",
+          "url": "https://research.nvidia.com/labs/nemotron/Nemotron-3.5-Bolt-24GB/"
+        },
+        {
           "title": "Hugging Face — Nemotron 3.5 Lightning",
           "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16"
         }
       ],
-      "match": "nemotron"
+      "match": "nemotron[\\w.-]*"
     },
     {
       "section": "models",
       "name": "GigaChat",
       "vendor": "Сбер · API + открытые веса",
-      "summary": "Российское семейство моделей Сбера, обученное с упором на русский язык. Доступно через GigaChat API (в т.ч. физлицам во freemium-режиме) и с открытыми весами на Hugging Face: GigaChat 4 (ноябрь 2026) — 37B-A4B и 708B-A41B, MoE, контекст 1M, режимы instant и reasoning, tool calling.",
+      "summary": "Российское семейство моделей Сбера, обученное с упором на русский язык. В GigaChat API — GigaChat 3 Ultra (в т.ч. физлицам во freemium-режиме) и GigaChat 2 Lite/Pro/Max. Открытые веса на Hugging Face: GigaChat 4 (ноябрь 2026) — 37B-A4B и 708B-A41B, MoE, контекст 1M, режимы instant и reasoning в одной модели, tool calling.",
       "pros": [
         "Сильный русский язык и знание российского контекста",
         "Работает из России без VPN и зарубежной оплаты, есть OpenAI-совместимый режим API",
-        "Открытые веса GigaChat 4, включая GGUF; 37B-A4B запускается на одной GPU 80 ГБ",
+        "Открытые веса GigaChat 4, включая GGUF; 37B-A4B в FP8 запускается на одной H100 80 ГБ",
         "GigaChat 4 708B выложена под MIT"
       ],
       "cons": [
         "GigaChat 4 37B-A4B — под некоммерческой лицензией для физлиц, для бизнеса не подходит",
-        "API отличается от OpenAI: OAuth-токен на 30 минут и сертификаты Минцифры для TLS",
+        "API отличается от OpenAI: токен доступа живёт 30 минут, нужны сертификаты НУЦ Минцифры для TLS",
         "По коду и сложным рассуждениям обычно уступает мировым флагманам"
       ],
       "best_for": "Проекты в России, где важны русский язык, локализация данных и легальный доступ без зарубежных сервисов.",
@@ -490,13 +562,13 @@
           "url": "https://habr.com/ru/companies/sberbank/articles/1112118/"
         }
       ],
-      "match": "gigachat|гигачат\\p{L}*"
+      "match": "gigachat[\\w.-]*|гигачат\\p{L}*"
     },
     {
       "section": "models",
       "name": "Alice AI (YandexGPT)",
       "vendor": "Яндекс · проприетарные модели в API + открытая базовая модель",
-      "summary": "Семейство моделей Яндекса (ранее YandexGPT), доступное через Yandex AI Studio: Alice AI LLM (контекст 128K), Alice AI LLM Flash и YandexGPT Pro 5/5.1. В сентябре 2026 Яндекс выложил базовую модель Alice AI Foundation 80B-A3B (MoE, контекст 262K) под Apache 2.0.",
+      "summary": "Семейство моделей Яндекса (ранее YandexGPT), доступное через Yandex AI Studio: Alice AI LLM (контекст 128K), Alice AI LLM Flash (64K) и YandexGPT Pro 5/5.1 (32K). В сентябре 2026 Яндекс выложил базовую модель Alice AI Foundation 80B-A3B (MoE, контекст 262K, обучена с нуля) под Apache 2.0.",
       "pros": [
         "Хорошо понимает русский язык и российский контекст; Foundation особенно сильна в фактах на русском",
         "Работа в российском облаке — удобно, если данные должны храниться в России",
@@ -504,10 +576,10 @@
         "Открытая Foundation-модель под Apache 2.0 — можно дообучать и использовать коммерчески"
       ],
       "cons": [
-        "Контекст меньше, чем у мировых флагманов: 128K у Alice AI LLM, 64K у Flash",
+        "Контекст меньше, чем у мировых флагманов: 128K у Alice AI LLM, 64K у Flash, 32K у YandexGPT Pro",
         "В сложном коде и агентных задачах уступает мировым лидерам",
         "Открыта только базовая (pretrain) модель без чат-дообучения; ей нужно ~160 ГБ видеопамяти в BF16",
-        "Старые модели выводятся из эксплуатации (YandexGPT Lite 5 — 15.11.2026), автоматического переключения нет"
+        "Старые модели выводятся из эксплуатации без автоматического переключения (YandexGPT Lite 5 и DeepSeek V4 Flash — с 15.11.2026, gpt-oss — с 30.10.2026)"
       ],
       "best_for": "Русскоязычные сервисы с требованием хранить данные в России (поддержка, документы, классификация) или основа для собственного дообучения.",
       "links": [
@@ -528,7 +600,69 @@
           "url": "https://yandex.cloud/ru/blog/alice-ai-llm-flash"
         }
       ],
-      "match": "yandexgpt|alice ai"
+      "match": "yandexgpt[\\w.-]*|alice ?ai(?:-[\\w.-]+)?|алис\\p{L}* ai"
+    },
+    {
+      "section": "models",
+      "name": "MiniMax",
+      "vendor": "MiniMax (Китай) · открытые веса",
+      "summary": "Мультимодальные MoE-модели для кода и агентов. MiniMax-M3 (июнь 2026) и MiniMax-M3.1-Flash (октябрь 2026): около 428B параметров, 23B активных, вход — текст, изображения и видео, контекст до 1M за счёт собственного разреженного внимания MSA.",
+      "pros": [
+        "Сильные результаты в агентных задачах, коде и кибербезопасности",
+        "Контекст до 1M токенов при сравнительно небольшом числе активных параметров",
+        "Режимы рассуждений: всегда, адаптивно или выключено (M3)",
+        "Поддержка в vLLM, SGLang, Transformers, KTransformers"
+      ],
+      "cons": [
+        "Лицензия MiniMax Community: для коммерческого использования нужна надпись «Built with MiniMax», уведомление MiniMax, а при выручке больше $20 млн в год — отдельное разрешение",
+        "Сотни миллиардов параметров — нужен сервер с несколькими GPU",
+        "Качество на русском официально не заявлено"
+      ],
+      "best_for": "Self-hosted мультимодальный агент для кода и работы с длинными документами, если подходят условия лицензии.",
+      "links": [
+        {
+          "title": "Hugging Face (MiniMaxAI)",
+          "url": "https://huggingface.co/MiniMaxAI"
+        },
+        {
+          "title": "MiniMax-M3.1-Flash — карточка модели",
+          "url": "https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash"
+        }
+      ],
+      "match": "minimax[- ]?[mh]\\d[\\w.-]*|minimax ?ai"
+    },
+    {
+      "section": "models",
+      "name": "MiMo",
+      "vendor": "Xiaomi · открытые веса",
+      "summary": "Открытые модели Xiaomi для агентов. MiMo-V2.6 (сентябрь 2026, MIT): Pro — 1.02T параметров, 42B активных, и Flash — 309B, 15B активных; обе понимают текст, изображения, видео и аудио, контекст 1M. Есть дистиллированная MiMo-V2.6-Distill-Qwen-9B на базе Qwen3.5-9B.",
+      "pros": [
+        "Лицензия MIT — без ограничений на коммерческое использование",
+        "Одна модель понимает текст, изображения, видео и аудио",
+        "Контекст 1M токенов",
+        "Есть маленькая 9B-версия для локального запуска"
+      ],
+      "cons": [
+        "Pro и Flash — сотни миллиардов параметров, нужен сервер",
+        "Официально заявлены только английский и китайский",
+        "После релиза V2.6 модели склонны повторять одни и те же вызовы инструментов; исправлено в обновлениях MOPD"
+      ],
+      "best_for": "Self-hosted мультимодальный агент под MIT, когда нужен вход аудио и видео.",
+      "links": [
+        {
+          "title": "Hugging Face (XiaomiMiMo)",
+          "url": "https://huggingface.co/XiaomiMiMo"
+        },
+        {
+          "title": "MiMo-V2.6-Pro — карточка модели",
+          "url": "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Pro-MOPD"
+        },
+        {
+          "title": "Сайт Xiaomi MiMo",
+          "url": "https://mimo.xiaomi.com"
+        }
+      ],
+      "match": "mimo[- ]?v\\d[\\w.-]*|xiaomi mimo"
     },
     {
       "section": "tools",
@@ -571,7 +705,7 @@
       "pros": [
         "Глубокая интеграция с GitHub: issues, PR, ревью кода",
         "Выбор моделей разных вендоров, в CLI можно подключить свой провайдер или локальную модель через Ollama",
-        "Поддержка MCP и песочницы в CLI",
+        "Поддержка MCP; в CLI локальная и облачная песочница",
         "Корпоративные политики и управление доступом"
       ],
       "cons": [
@@ -587,24 +721,24 @@
         },
         {
           "title": "Copilot CLI",
-          "url": "https://docs.github.com/en/copilot/concepts/agents/about-copilot-cli"
+          "url": "https://docs.github.com/en/copilot/concepts/copilot-surfaces/copilot-cli"
         }
       ],
-      "match": "copilot"
+      "match": "github copilot|copilot (?:cli|coding agent|code review|agent mode)|copilot-cli"
     },
     {
       "section": "tools",
       "name": "Cursor",
       "vendor": "Anysphere · AI-IDE (форк VS Code)",
-      "summary": "Редактор, построенный вокруг ИИ: автодополнение, агент для правок нескольких файлов, режим планирования и ревью диффов. Кроме моделей других вендоров есть собственные модели Composer.",
+      "summary": "Редактор, построенный вокруг ИИ: автодополнение, агент для правок нескольких файлов, режим планирования и ревью диффов. Есть Cursor CLI, облачные агенты, которые возвращают готовый PR, и агент в IDE JetBrains через протокол ACP. Кроме моделей других вендоров есть собственные модели Composer.",
       "pros": [
         "Быстрое и качественное автодополнение",
         "Агент с Plan Mode, правилами, MCP, плагинами и скиллами",
         "Собственные быстрые модели Composer наряду со сторонними",
-        "Интеграции с GitHub, GitLab, Slack, Linear"
+        "Интеграции с GitHub, GitLab, Bitbucket, Slack, Linear; облачных агентов можно запускать из Slack, веба и iOS"
       ],
       "cons": [
-        "Отдельный редактор, а не плагин, в отличие от Copilot или Cline",
+        "Основной продукт — отдельный редактор; в JetBrains доступен только агент через ACP и только на платном плане",
         "Тарифы и лимиты часто меняются"
       ],
       "best_for": "Ежедневное программирование с плотной помощью ИИ прямо в редакторе.",
@@ -614,19 +748,23 @@
           "url": "https://cursor.com/docs"
         },
         {
+          "title": "Облачные агенты",
+          "url": "https://cursor.com/docs/cloud-agent"
+        },
+        {
           "title": "Сайт",
           "url": "https://cursor.com/"
         }
       ],
-      "match": "anysphere|cursor (?:ide|ai|agent|composer|rules)|(?:в|with|in|using) cursor"
+      "match": "anysphere|cursor (?:ide|ai|agent|agents|composer|rules|cli|bugbot|\\d[\\w.]*)|(?:в|с|для|with|in|on|using|via|from|like|and|,) cursor|cursor(?:,| и| and| or| vs\\.?|['’]s (?:agent|composer|bugbot|ceo|ai))"
     },
     {
       "section": "tools",
       "name": "Ollama",
       "vendor": "Open source · локальный запуск",
-      "summary": "Простой способ скачать и запустить открытые модели одной командой, с десктоп-приложением для macOS, Windows и Linux. Внутри llama.cpp, собственный движок и MLX-раннер для Apple Silicon; при нехватке железа можно запускать модели в облаке Ollama.",
+      "summary": "Простой способ скачать и запустить открытые модели одной командой: десктоп-приложение для macOS и Windows, на Linux — установка скриптом. Внутри llama.cpp, собственный движок и MLX-раннер для Apple Silicon; при нехватке железа можно запускать модели в облаке Ollama.",
       "pros": [
-        "Установка за минуты, есть GUI и CLI",
+        "Установка за минуты, есть GUI и CLI, лицензия MIT",
         "API совместим с OpenAI и Anthropic, есть библиотеки для Python и JavaScript",
         "Поддержка tool calling, много интеграций (LangChain, Copilot CLI, Cline)",
         "Данные не покидают машину при локальном запуске"
@@ -645,6 +783,10 @@
         {
           "title": "GitHub",
           "url": "https://github.com/ollama/ollama"
+        },
+        {
+          "title": "MLX на Apple Silicon",
+          "url": "https://ollama.com/blog/mlx-apple-silicon"
         }
       ],
       "match": "ollama"
@@ -684,8 +826,8 @@
       "summary": "Высокопроизводительный сервер для LLM в продакшене: PagedAttention, непрерывный батчинг, кэш префиксов. Отдаёт OpenAI-совместимый API, а также Anthropic Messages API и gRPC.",
       "pros": [
         "Высокая пропускная способность и все виды параллелизма: тензорный, конвейерный, экспертный",
-        "Квантизация (FP8, INT4, GPTQ/AWQ, GGUF) и спекулятивное декодирование",
-        "NVIDIA и AMD из коробки, TPU, Gaudi, Ascend и другие через плагины",
+        "Квантизация (FP8, NVFP4, INT4, GPTQ/AWQ, GGUF) и спекулятивное декодирование (EAGLE, n-gram и др.)",
+        "NVIDIA, AMD, Intel GPU и CPU из коробки; TPU, Gaudi, Ascend, Apple Silicon и другие через плагины",
         "Стандарт де-факто для self-hosted, поддержка новых моделей появляется быстро"
       ],
       "cons": [
@@ -771,7 +913,7 @@
       "section": "tools",
       "name": "LlamaIndex",
       "vendor": "Open source + облако · документы и RAG",
-      "summary": "Фреймворк для подключения LLM к своим данным и платформа LlamaParse для документов: разбор PDF, сканов и Office-файлов в markdown или JSON, извлечение по схеме, классификация и управляемая индексация для RAG.",
+      "summary": "Фреймворк для подключения LLM к своим данным и платформа LlamaParse для документов: разбор PDF, сканов и Office-файлов в markdown или JSON, извлечение по схеме, классификация, разбиение составных файлов и управляемая индексация для RAG.",
       "pros": [
         "Сильный парсинг сложных документов: таблицы, сканы, многоколоночная вёрстка",
         "Извлечение структурированных данных по схеме",
@@ -789,18 +931,18 @@
           "url": "https://developers.llamaindex.ai/"
         }
       ],
-      "match": "llamaindex|llamaparse"
+      "match": "llama[ -]?index|llamaparse"
     },
     {
       "section": "tools",
       "name": "OpenAI Codex",
       "vendor": "OpenAI · агент для разработки",
-      "summary": "Агент для кода от OpenAI: открытый Codex CLI на Rust, расширение для IDE, облачные задачи Codex Cloud и интеграция в приложения ChatGPT. Команды выполняются в песочнице ОС (Seatbelt, bubblewrap, механизм Windows) с профилями прав.",
+      "summary": "Агент для кода от OpenAI: открытый Codex CLI (Apache-2.0, на Rust), расширение для IDE, десктоп-приложение, облачные задачи Codex Cloud и интеграция в приложения ChatGPT. Команды выполняются в песочнице ОС (Seatbelt, bubblewrap, механизм Windows) с профилями прав.",
       "pros": [
         "Много поверхностей: CLI, IDE, облако, десктоп и мобильный ChatGPT",
         "Продуманная песочница: по умолчанию запись только в рабочую папку и без сети",
         "Скиллы, плагины, MCP, хуки; есть SDK и GitHub Action",
-        "Интеграции с GitHub, Slack, Linear"
+        "Интеграции с GitHub, GitLab (бета), Slack, Linear"
       ],
       "cons": [
         "В основном модели OpenAI",
@@ -811,7 +953,7 @@
       "links": [
         {
           "title": "Документация",
-          "url": "https://learn.chatgpt.com/docs"
+          "url": "https://developers.openai.com/codex"
         },
         {
           "title": "GitHub",
@@ -822,13 +964,16 @@
           "url": "https://openai.com/index/inside-the-codex-sandbox"
         }
       ],
-      "match": "codex"
+      "match": "codex(?! alimentarius)",
+      "unverified": [
+        "Претензии к тому, что Codex отправляет на серверы git diff: официального или надёжного источника не нашлось; есть только обсуждение телеметрии CLI (github.com/openai/codex/discussions/8291), где OpenAI пишет, что аналитика не содержит кода"
+      ]
     },
     {
       "section": "tools",
       "name": "Cline",
       "vendor": "Open source · агент в IDE и терминале",
-      "summary": "Открытый агент для VS Code, плагин для JetBrains и CLI. Работает в режимах Plan и Act, показывает каждое изменение как дифф с точками отката и подключается к любой модели.",
+      "summary": "Открытый агент: расширение для VS Code (и его форков), плагин для JetBrains, CLI, десктоп-приложение для macOS и Windows и SDK для встраивания. Работает в режимах Plan и Act, показывает каждое изменение как дифф с точками отката и подключается к любой модели.",
       "pros": [
         "Любая модель: Anthropic, OpenAI, Google, OpenRouter, Bedrock, локальные через Ollama и LM Studio",
         "Подтверждение каждого действия и чекпоинты для отката",
@@ -845,6 +990,10 @@
         {
           "title": "GitHub",
           "url": "https://github.com/cline/cline"
+        },
+        {
+          "title": "Сайт",
+          "url": "https://cline.bot/"
         }
       ],
       "match": "cline"
@@ -853,7 +1002,7 @@
       "section": "tools",
       "name": "LM Studio",
       "vendor": "LM Studio · локальный запуск с GUI",
-      "summary": "Десктоп-приложение для поиска, скачивания и запуска открытых моделей на движках llama.cpp и MLX. Поднимает локальный сервер с OpenAI- и Anthropic-совместимыми эндпоинтами; есть headless-демон llmster для серверов.",
+      "summary": "Десктоп-приложение для поиска, скачивания и запуска открытых моделей на движках llama.cpp и MLX. Поднимает локальный сервер с OpenAI- и Anthropic-совместимыми эндпоинтами; есть headless-демон llmster для серверов. С июля 2026 у компании есть отдельное приложение-агент Bionic для работы с открытыми моделями.",
       "pros": [
         "Удобный графический интерфейс, проще, чем у Ollama, для новичков",
         "MLX на Mac даёт хорошую скорость на Apple Silicon",
@@ -861,7 +1010,7 @@
         "Headless-режим и CLI lms для серверов и CI"
       ],
       "cons": [
-        "Само приложение не open source, в отличие от Ollama и llama.cpp",
+        "Само приложение закрытое; открыты только SDK, CLI lms и MLX-движок (MIT)",
         "Как и любой локальный запуск, упирается в память и GPU"
       ],
       "best_for": "Локальные модели на рабочем компьютере без командной строки, особенно на Mac.",
@@ -873,20 +1022,24 @@
         {
           "title": "Для разработчиков",
           "url": "https://lmstudio.ai/docs/developer"
+        },
+        {
+          "title": "Агент Bionic",
+          "url": "https://lmstudio.ai/blog/introducing-lm-studio-bionic"
         }
       ],
-      "match": "lm studio"
+      "match": "lm ?studio"
     },
     {
       "section": "tools",
       "name": "SGLang",
       "vendor": "Open source · сервер инференса",
-      "summary": "Сервер инференса для языковых, мультимодальных и диффузионных моделей с RadixAttention для переиспользования префиксов. Ориентирован на агентные нагрузки, крупный сервинг и RL-роллауты.",
+      "summary": "Сервер инференса для языковых, мультимодальных и диффузионных моделей с RadixAttention для переиспользования префиксов. Ориентирован на агентные нагрузки, крупный сервинг и RL-роллауты. Лицензия Apache-2.0.",
       "pros": [
         "Высокая производительность на длинных диалогах с общими префиксами",
         "Широкое железо: NVIDIA, AMD, TPU, Intel, Apple Silicon, Ascend",
         "OpenAI-совместимый API; используется в verl, Ray Serve, NVIDIA Dynamo",
-        "Встроенный движок для генерации изображений и видео"
+        "Встроенный движок SGLang Diffusion для генерации изображений, видео и аудио"
       ],
       "cons": [
         "Нужны серверные GPU и опыт эксплуатации",
@@ -971,6 +1124,7 @@
         "Гибридный поиск (dense + sparse) со слиянием RRF",
         "Богатые фильтры: ключевые слова, полнотекст, диапазоны, гео",
         "Квантизация сильно сокращает потребление памяти",
+        "Qdrant Edge для встраивания в приложение и офлайн-работы, ускорение индексации на GPU",
         "Apache-2.0, есть управляемое облако"
       ],
       "cons": [
@@ -997,7 +1151,7 @@
       "summary": "Лёгкая библиотека для агентов на Python и TypeScript: агенты с инструментами, передача задач между агентами (handoffs), guardrails, сессии и встроенная трассировка. Есть sandbox-агенты для длинных задач в контейнере и голосовые агенты.",
       "pros": [
         "Мало абстракций, в отличие от LangChain",
-        "Работает не только с OpenAI, но и с сотней других моделей",
+        "Не привязан к OpenAI: Responses и Chat Completions API плюс более сотни других моделей",
         "MCP, hosted-инструменты, human-in-the-loop",
         "Встроенная трассировка для отладки"
       ],
@@ -1016,12 +1170,76 @@
           "url": "https://github.com/openai/openai-agents-js"
         }
       ],
-      "match": "agents sdk"
+      "match": "openai\\S* agents sdk|openai-agents(?:-python|-js)?"
+    },
+    {
+      "section": "tools",
+      "name": "Google Antigravity",
+      "vendor": "Google · платформа для агентной разработки",
+      "summary": "Платформа Google для разработки с агентами: десктоп-приложение для параллельных агентов, IDE с менеджером агентов, Antigravity CLI и SDK на Python. С июня 2026 заменяет Gemini CLI для личных аккаунтов и подписок Google AI Pro/Ultra; Gemini CLI остаётся открытым (Apache-2.0) для корпоративного Gemini Code Assist.",
+      "pros": [
+        "Агенты планируют и выполняют задачи в редакторе, терминале и браузере",
+        "Артефакты для ревью: планы, скриншоты, записи браузера; к ним можно оставлять комментарии",
+        "Фоновые задачи по расписанию, субагенты, MCP и плагины",
+        "Есть бесплатный доступ для разработчиков; macOS, Windows, Linux"
+      ],
+      "cons": [
+        "Ориентирован на модели Gemini",
+        "Сама платформа не open source, в отличие от Gemini CLI",
+        "Продукты быстро меняются: Gemini CLI для личных аккаунтов перенесён в Antigravity CLI"
+      ],
+      "best_for": "Тем, кто работает с Gemini и экосистемой Google (AI Studio, Firebase, Android) и хочет управлять несколькими агентами сразу.",
+      "links": [
+        {
+          "title": "Сайт",
+          "url": "https://antigravity.google/"
+        },
+        {
+          "title": "Анонс (2025)",
+          "url": "https://developers.googleblog.com/build-with-google-antigravity-our-new-agentic-development-platform/"
+        },
+        {
+          "title": "Gemini CLI",
+          "url": "https://github.com/google-gemini/gemini-cli"
+        }
+      ],
+      "unverified": [
+        "Поддерживаются ли сейчас модели других вендоров: при запуске в 2025 были Claude Sonnet 4.5 и GPT-OSS, на текущем сайте упомянуты только Gemini"
+      ],
+      "match": "antigravity|gemini cli|gemini-cli"
+    },
+    {
+      "section": "tools",
+      "name": "OpenCode",
+      "vendor": "Open source (MIT) · агент для разработки",
+      "summary": "Открытый агент для кода: терминальный интерфейс, десктоп-приложение (бета) и веб-интерфейс. Подключается к множеству провайдеров моделей, расширяется через MCP-серверы и плагины.",
+      "pros": [
+        "Лицензия MIT, не привязан к вендору моделей",
+        "Встроенные агенты build (с правом правок) и plan (только чтение), субагент для сложного поиска",
+        "MCP, плагины, свои команды в конфиге",
+        "Десктоп-приложение для macOS, Windows и Linux"
+      ],
+      "cons": [
+        "Качество сильно зависит от выбранной модели",
+        "Десктоп-версия пока в бете"
+      ],
+      "best_for": "Открытая альтернатива Claude Code и Codex CLI в терминале со свободным выбором модели.",
+      "links": [
+        {
+          "title": "Документация",
+          "url": "https://opencode.ai/docs"
+        },
+        {
+          "title": "GitHub",
+          "url": "https://github.com/anomalyco/opencode"
+        }
+      ],
+      "match": "opencode"
     },
     {
       "section": "concepts",
       "name": "Токены и контекстное окно",
-      "summary": "Модель читает текст токенами (кусками слов): «программирование» может разбиться на 3–4 токена. Контекстное окно — сколько токенов модель видит за раз: системный промпт, история диалога, документы и сам ответ вместе.",
+      "summary": "Модель читает текст токенами (кусками слов): «программирование» может разбиться на несколько токенов (сколько именно — зависит от токенизатора). Контекстное окно — сколько токенов модель видит за раз: системный промпт, история диалога, документы и сам ответ вместе.",
       "pros": [
         "Большое окно позволяет передать целый документ, договор или часть репозитория",
         "Цена API и лимиты считаются в токенах — удобно оценивать затраты и скорость",
@@ -1047,7 +1265,8 @@
           "title": "Lost in the Middle (статья)",
           "url": "https://arxiv.org/abs/2307.03172"
         }
-      ]
+      ],
+      "match": "context windows?|контекстн\\p{L}* окн\\p{L}*|tokenizers?|токенизатор\\p{L}*"
     },
     {
       "section": "concepts",
@@ -1076,7 +1295,7 @@
           "url": "https://www.anthropic.com/research/contextual-retrieval"
         }
       ],
-      "match": "rag|retrieval-augmented"
+      "match": "rag|graphrag|lightrag|retrieval[- ]augmented"
     },
     {
       "section": "concepts",
@@ -1136,7 +1355,7 @@
           "url": "https://huggingface.co/docs/peft/index"
         }
       ],
-      "match": "fine-?tun\\p{L}*|lora|дообучени\\p{L}*"
+      "match": "fine-?tun\\p{L}*|q?lora|дообучени\\p{L}*|файн-?тюн\\p{L}*"
     },
     {
       "section": "concepts",
@@ -1164,7 +1383,7 @@
           "url": "https://github.com/ggml-org/llama.cpp"
         }
       ],
-      "match": "квантизаци\\p{L}*|quantiz\\p{L}*"
+      "match": "квантизаци\\p{L}*|квантован\\p{L}*|quantiz\\p{L}*"
     },
     {
       "section": "concepts",
@@ -1179,7 +1398,7 @@
       "cons": [
         "В памяти всё равно нужно держать все веса — локально запускать тяжело",
         "Сложнее обучать и дообучать: балансировка нагрузки между экспертами",
-        "Эффективна при больших батчах на серверах, на одном пользователе выигрыш меньше"
+        "При запуске на нескольких GPU эксперты разносятся по картам — нужна быстрая связь между ними"
       ],
       "best_for": "Чтение анонсов моделей: разница между общими и активными параметрами, оценка требований к железу.",
       "links": [
@@ -1188,7 +1407,7 @@
           "url": "https://huggingface.co/blog/moe"
         }
       ],
-      "match": "mixture of experts|moe"
+      "match": "mixture[- ]of[- ]experts|moe"
     },
     {
       "section": "concepts",
@@ -1220,7 +1439,7 @@
           "url": "https://platform.claude.com/docs/en/build-with-claude/extended-thinking"
         }
       ],
-      "match": "reasoning models?|рассуждающ\\p{L}* модел\\p{L}*"
+      "match": "reasoning models?|reasoning-модел\\p{L}*|рассуждающ\\p{L}* модел\\p{L}*"
     },
     {
       "section": "concepts",
@@ -1248,17 +1467,18 @@
           "title": "OpenAI: Function calling",
           "url": "https://developers.openai.com/api/docs/guides/function-calling"
         }
-      ]
+      ],
+      "match": "function calling|tool calling|tool use|ai agents?|agentic ai|ии-агент\\p{L}*"
     },
     {
       "section": "concepts",
       "name": "MCP (Model Context Protocol)",
-      "summary": "Открытый протокол подключения инструментов и источников данных к ИИ-приложениям. Один MCP-сервер (например, для GitHub или базы данных) работает с разными клиентами: Claude, ChatGPT, IDE, агентами. Предложен Anthropic, сейчас развивается как открытый стандарт.",
+      "summary": "Открытый протокол подключения инструментов и источников данных к ИИ-приложениям. Один MCP-сервер (например, для GitHub или базы данных) работает с разными клиентами: Claude, ChatGPT, IDE, агентами. Предложен Anthropic в 2024 году, с декабря 2025 развивается в Agentic AI Foundation при Linux Foundation; текущая версия спецификации — 2026-07-28.",
       "pros": [
         "Стандарт вместо самописных интеграций под каждое приложение",
         "Большой каталог готовых серверов: от файлов и БД до SaaS-сервисов",
         "Поддерживается основными ИИ-клиентами и IDE",
-        "Работает локально (stdio) и удалённо (HTTP с авторизацией)"
+        "Работает локально (stdio) и удалённо (Streamable HTTP с авторизацией)"
       ],
       "cons": [
         "Сторонние серверы — это риск для безопасности: проверяйте, что подключаете",
@@ -1268,11 +1488,19 @@
       "best_for": "Подключение своих данных и сервисов к ИИ-ассистентам и агентам; часто упоминается в анонсах инструментов.",
       "links": [
         {
-          "title": "Документация и спецификация",
+          "title": "Документация MCP",
           "url": "https://modelcontextprotocol.io/"
         },
         {
-          "title": "Anthropic: анонс MCP",
+          "title": "Спецификация (последняя версия)",
+          "url": "https://modelcontextprotocol.io/specification/latest"
+        },
+        {
+          "title": "MCP переходит в Agentic AI Foundation (2025)",
+          "url": "https://blog.modelcontextprotocol.io/posts/2025-12-09-mcp-joins-agentic-ai-foundation/"
+        },
+        {
+          "title": "Anthropic: анонс MCP (2024)",
           "url": "https://www.anthropic.com/news/model-context-protocol"
         }
       ],
@@ -1304,7 +1532,10 @@
           "url": "https://arxiv.org/abs/2311.05232"
         }
       ],
-      "match": "галлюцинаци\\p{L}*|hallucinat\\p{L}*"
+      "match": "галлюцинаци\\p{L}*|hallucinat\\p{L}*",
+      "unverified": [
+        "«Новые модели заметно чаще признают незнание» — общее утверждение, отдельным источником не проверялось"
+      ]
     },
     {
       "section": "concepts",
@@ -1395,7 +1626,7 @@
       ],
       "cons": [
         "Работает только для точно совпадающего префикса: любое изменение в начале сбрасывает кэш",
-        "Кэш живёт недолго (минуты), правила и настройки у провайдеров разные",
+        "Кэш живёт ограниченное время (от минут до часов), правила, цены и настройки у провайдеров разные",
         "Требует продумывать порядок частей промпта: статичное в начало, изменяемое в конец"
       ],
       "best_for": "Оптимизация затрат на API; встречается в анонсах цен и документации всех крупных провайдеров.",
@@ -1409,7 +1640,7 @@
           "url": "https://developers.openai.com/api/docs/guides/prompt-caching"
         }
       ],
-      "match": "prompt caching"
+      "match": "prompt caching|prompt cache|context caching|кэшировани\\p{L}* промпт\\p{L}*"
     },
     {
       "section": "concepts",
@@ -1471,11 +1702,11 @@
       "summary": "Ускорение генерации: маленькая быстрая модель «угадывает» несколько следующих токенов, а большая проверяет их одним проходом. Совпавшие принимаются, поэтому ответ тот же, а скорость выше в 2–3 раза.",
       "pros": [
         "Ускоряет генерацию без потери качества — результат как у большой модели",
-        "Поддерживается популярными движками инференса (vLLM, llama.cpp, TGI)",
+        "Поддерживается популярными движками инференса (vLLM, SGLang, llama.cpp)",
         "Особенно хорошо работает на предсказуемом тексте: код, шаблоны, правки"
       ],
       "cons": [
-        "Нужна совместимая черновая модель (общий токенизатор) или специальные головы",
+        "Нужна совместимая черновая модель (общий токенизатор) или специальные головы (EAGLE, MTP)",
         "Дополнительный расход памяти и вычислений",
         "Выигрыш падает на «творческом» тексте и при больших батчах"
       ],
@@ -1488,9 +1719,13 @@
         {
           "title": "Hugging Face: Assisted Generation",
           "url": "https://huggingface.co/blog/assisted-generation"
+        },
+        {
+          "title": "vLLM: speculative decoding",
+          "url": "https://docs.vllm.ai/en/latest/features/speculative_decoding/"
         }
       ],
-      "match": "speculative decoding"
+      "match": "speculative decoding|спекулятивн\\p{L}* декодировани\\p{L}*"
     },
     {
       "section": "concepts",
@@ -1513,7 +1748,8 @@
           "title": "Hugging Face: Vision Language Models Explained",
           "url": "https://huggingface.co/blog/vlms"
         }
-      ]
+      ],
+      "match": "multimodal\\p{L}*|мультимодальн\\p{L}*"
     },
     {
       "section": "concepts",
@@ -1541,7 +1777,7 @@
           "url": "https://developers.openai.com/api/docs/guides/evals"
         }
       ],
-      "match": "evals"
+      "match": "evals|llm-as-a?-judge"
     },
     {
       "section": "concepts",
@@ -1614,7 +1850,7 @@
           "url": "https://opensource.org/ai/open-source-ai-definition"
         }
       ],
-      "match": "open[- ]weights?"
+      "match": "open[- ]weights?|открыт\\p{L}* вес(?:а|ами)"
     },
     {
       "section": "concepts",
@@ -1668,7 +1904,7 @@
           "url": "https://openai.com/index/learning-to-reason-with-llms/"
         }
       ],
-      "match": "test-time compute"
+      "match": "test-time (?:compute|scaling)|inference-time (?:compute|scaling)"
     },
     {
       "section": "concepts",
@@ -1695,16 +1931,16 @@
           "url": "https://openai.com/index/computer-using-agent/"
         }
       ],
-      "match": "computer use"
+      "match": "computer[- ]use|computer-using agents?"
     },
     {
       "section": "concepts",
       "name": "A2A (Agent2Agent) и протоколы агентов",
-      "summary": "Открытый протокол для общения агентов между собой: агент публикует «карточку» со своими умениями, другие агенты могут передавать ему задачи и получать результаты. Дополняет MCP: MCP подключает инструменты к агенту, A2A связывает агентов разных команд и вендоров.",
+      "summary": "Открытый протокол для общения агентов между собой: агент публикует «карточку» (Agent Card) со своими умениями, другие агенты могут передавать ему задачи и получать результаты. Предложен Google в апреле 2025, с июня 2025 развивается в Linux Foundation; в марте 2026 вышла первая стабильная версия 1.0. Дополняет MCP: MCP подключает инструменты к агенту, A2A связывает агентов разных команд и вендоров.",
       "pros": [
         "Агенты разных компаний и фреймворков могут взаимодействовать по стандарту",
-        "Поддерживает долгие задачи, стриминг статуса и обмен файлами",
-        "Открытый проект с поддержкой крупных компаний"
+        "Поддерживает долгие задачи, стриминг статуса, push-уведомления и обмен файлами; работает поверх JSON-RPC, gRPC или REST",
+        "Открытый проект Linux Foundation, поддерживают 150+ организаций (Google, Microsoft, AWS, Salesforce, SAP и др.)"
       ],
       "cons": [
         "Экосистема моложе MCP, реальных внедрений меньше",
@@ -1718,11 +1954,81 @@
           "url": "https://a2a-protocol.org/"
         },
         {
+          "title": "Спецификация A2A",
+          "url": "https://a2a-protocol.org/latest/specification/"
+        },
+        {
           "title": "GitHub: a2aproject/A2A",
           "url": "https://github.com/a2aproject/A2A"
+        },
+        {
+          "title": "Google: год A2A и версия 1.0",
+          "url": "https://opensource.googleblog.com/2026/04/a-year-of-open-collaboration-celebrating-the-anniversary-of-a2a.html"
         }
       ],
-      "match": "a2a|agent2agent"
+      "match": "a2a|agent2agent",
+      "unverified": [
+        "«Реальных внедрений меньше, чем у MCP» — прямого сравнения масштабов внедрения не нашёл"
+      ]
+    },
+    {
+      "section": "concepts",
+      "name": "Agent Skills (навыки агентов)",
+      "summary": "Открытый формат «навыков» для ИИ-агентов: папка с файлом SKILL.md (название, описание, инструкции) и, при необходимости, скриптами, шаблонами и справочными файлами. Агент сначала видит только названия и описания навыков, а полный текст подгружает, когда задача подходит. Формат создан Anthropic, с октября 2026 развивается в Agentic AI Foundation.",
+      "pros": [
+        "Один навык работает в разных агентах: Claude, ChatGPT, GitHub Copilot, Cursor, VS Code и других",
+        "Почти не расходует контекст, пока навык не нужен",
+        "Простой формат: Markdown-файл в git, удобно ревьюить и переиспользовать",
+        "Можно упаковать знания команды: регламенты, шаблоны документов, скрипты"
+      ],
+      "cons": [
+        "Чужие навыки могут содержать вредные инструкции и скрипты — проверяйте перед установкой",
+        "Агент может не применить навык, если описание сформулировано неудачно",
+        "Права, песочница и запуск скриптов зависят от конкретного агента"
+      ],
+      "best_for": "Повторяющиеся задачи в кодинг-агентах и корпоративных ассистентах; в новостях — поддержка навыков в новых продуктах.",
+      "links": [
+        {
+          "title": "Agent Skills: обзор формата",
+          "url": "https://agentskills.io/"
+        },
+        {
+          "title": "Спецификация Agent Skills",
+          "url": "https://agentskills.io/specification"
+        },
+        {
+          "title": "Anthropic: передача Agent Skills в Agentic AI Foundation",
+          "url": "https://www.anthropic.com/news/donating-agent-skills-to-the-agentic-ai-foundation"
+        }
+      ],
+      "match": "agent skills|skill\\.md|agentskills"
+    },
+    {
+      "section": "concepts",
+      "name": "World models (модели мира)",
+      "summary": "Модели, которые учатся предсказывать, как меняется окружение в ответ на действия, и могут «проигрывать» будущее в симуляции. Пример — Genie 4 от Google DeepMind: по тексту или картинке создаёт интерактивный мир, по которому можно перемещаться в реальном времени.",
+      "pros": [
+        "Безопасная среда для обучения и проверки планов агентов и роботов",
+        "Генерация игровых и учебных сценариев без ручной разработки",
+        "Считаются одним из путей к ИИ, который понимает физику и последствия действий"
+      ],
+      "cons": [
+        "На длинных сессиях детали «плывут»: объекты меняются или исчезают",
+        "Очень требовательны к вычислениям, многие модели доступны только в превью",
+        "Термин размыт: так называют и генераторы интерактивного видео, и внутренние модели среды в обучении с подкреплением"
+      ],
+      "best_for": "Робототехника, игры, обучение агентов; в новостях — Genie, видеомодели-симуляторы, «физический ИИ».",
+      "links": [
+        {
+          "title": "World Models (Ha, Schmidhuber, 2018)",
+          "url": "https://arxiv.org/abs/1803.10122"
+        },
+        {
+          "title": "Google DeepMind: Genie 4",
+          "url": "https://deepmind.google/blog/genie-4-a-new-generation-of-world-simulation/"
+        }
+      ],
+      "match": "world models?"
     }
   ]
 }

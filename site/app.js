@@ -786,6 +786,7 @@
         ${it.pros && it.pros.length ? `<h4>${esc(sec.pros_label || "Сильные стороны")}</h4>${list(it.pros, "pros")}` : ""}
         ${it.cons && it.cons.length ? `<h4>${esc(sec.cons_label || "Слабые стороны")}</h4>${list(it.cons, "cons")}` : ""}
         ${it.best_for ? `<h4>Когда выбирать</h4><p>${esc(it.best_for)}</p>` : ""}
+        ${it.unverified && it.unverified.length ? `<details class="unverified small"><summary>Не подтверждено официальными источниками (${it.unverified.length})</summary>${list(it.unverified, "")}</details>` : ""}
         ${kbNews(it)}
         ${it.links && it.links.length ? `<div class="links">${it.links.map((l) => `<a href="${esc(safeUrl(l.url))}" target="_blank" rel="noopener noreferrer">${esc(l.title)} ↗</a>`).join("")}</div>` : ""}
       </article>`;

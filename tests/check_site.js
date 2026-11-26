@@ -25,6 +25,8 @@ if (kb) {
     names.add(it.name);
     if (!sections.has(it.section)) fail(`${where}: неизвестный раздел ${it.section}`);
     for (const l of it.links || []) if (!isUrl(l.url) || !l.title) fail(`${where}: плохая ссылка ${JSON.stringify(l)}`);
+    if (it.unverified !== undefined && !(Array.isArray(it.unverified) && it.unverified.every((x) => typeof x === "string" && x)))
+      fail(`${where}: unverified должен быть списком строк`);
     if (it.match) {
       try {
         const rx = new RegExp(`(?<![\\p{L}\\d])(?:${it.match})(?![\\p{L}\\d])`, "iu");
