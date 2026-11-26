@@ -7,17 +7,23 @@
 """
 from __future__ import annotations
 
+import gzip
 import hashlib
 import html
 import json
+import math
 import re
 import sys
+import time
+import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
+import zlib
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCES_FILE = ROOT / "sources.json"
@@ -45,8 +51,13 @@ TAG_RULES: list[tuple[str, re.Pattern]] = [
     ("API/цены", re.compile(r"\b(api|pricing|price\w*|rate limit\w*|цен\w*|тариф\w*)\b", re.I)),
 ]
 
+SCRIPT_STYLE_RE = re.compile(r"<(script|style)\b[^>]*>.*?</\1>", re.I | re.S)
 TAG_RE = re.compile(r"<[^>]+>")
 WS_RE = re.compile(r"\s+")
+ARXIV_ID_RE = re.compile(r"arxiv\.org/(?:abs|pdf)/(\d+\.\d+)", re.I)
+TRACKING_PARAMS = frozenset({
+    "ref", "fbclid", "gclid", "yclid", "mc_cid", "mc_eid", "igshid", "si", "feature",
+})
 
 
 def local(tag: str) -> str:
@@ -68,7 +79,8 @@ def text_of(el: ET.Element | None) -> str:
 
 
 def clean(s: str, limit: int | None = None) -> str:
-    s = html.unescape(TAG_RE.sub(" ", s or ""))
+    s = SCRIPT_STYLE_RE.sub(" ", s or "")
+    s = html.unescape(TAG_RE.sub(" ", s))
     s = WS_RE.sub(" ", s).strip()
     if limit and len(s) > limit:
         s = s[:limit].rsplit(" ", 1)[0].rstrip(",.;:") + "…"
@@ -135,7 +147,7 @@ def tags_for(title: str, summary: str, category: str) -> list[str]:
 
 # ---- Дедупликация: одна новость из разных источников -> общий "group" ----
 DEDUP_WINDOW = timedelta(days=3)   # сравниваем только записи, опубликованные близко по времени
-DEDUP_JACCARD = 0.3                # доля общих значимых слов (0.2 уже даёт ложные склейки)
+DEDUP_JACCARD = 0.32               # порог IDF-взвешенного Jaccard по значимым словам
 DEDUP_MIN_SHARED = 3               # и минимум столько общих слов
 STOPWORDS = set("""
 a an the and or but of to in on at for from by with without as is are was were be been being it its this that these
@@ -160,17 +172,80 @@ def title_tokens(title: str) -> frozenset[str]:
 
 
 def link_key(link: str) -> str:
-    return re.sub(r"^https?://(www\.)?", "", link.split("?")[0].split("#")[0]).rstrip("/").lower()
+    """Нормализует URL для дедупликации: убирает трекинговые параметры, но сохраняет значимые (?p=, ?id=, ?v=)."""
+    p = urlsplit(link.strip())
+    host = re.sub(r"^www\.", "", p.netloc.lower())
+    path = p.path.rstrip("/")
+    params = sorted(
+        (k, v) for k, v in parse_qsl(p.query, keep_blank_values=False)
+        if not k.lower().startswith("utm_") and k.lower() not in TRACKING_PARAMS
+    )
+    query = ("?" + urlencode(params)) if params else ""
+    return f"{host}{path}{query}".lower()
 
 
-def assign_groups(items: list[dict]) -> int:
+def assign_groups(items: list[dict], parsed_dates: list[datetime] | None = None) -> int:
     """Проставляет it["group"] у записей, которые пересказывают одну новость. Возвращает число склеек.
 
-    Правила: разные источники; дата в пределах DEDUP_WINDOW; совпадает ссылка
-    или заголовки похожи (Jaccard >= DEDUP_JACCARD и >= DEDUP_MIN_SHARED общих слов).
+    Правила: разные источники (включая защиту от транзитивной склейки одного источника);
+    диапазон дат всей группы в пределах DEDUP_WINDOW; совпадает ссылка
+    или заголовки похожи (IDF-взвешенный Jaccard >= DEDUP_JACCARD и >= DEDUP_MIN_SHARED общих слов).
     """
     n = len(items)
+    toks = [title_tokens(it["title"]) for it in items]
+    dates = parsed_dates if parsed_dates is not None else [datetime.fromisoformat(it["published"]) for it in items]
+    lks = [link_key(it["link"]) for it in items]
+    arxiv_ids = [m.group(1) if (m := ARXIV_ID_RE.search(it["link"])) else None for it in items]
+
+    # IDF снижает вес частых шаблонных слов («large language models», «hackers exploit critical flaw»).
+    df: dict[str, int] = {}
+    for ts in toks:
+        for t in ts:
+            df[t] = df.get(t, 0) + 1
+    idf = {t: math.log((n + 1) / (c + 1)) + 1.0 for t, c in df.items()}
+    tok_w = [sum(idf[t] for t in ts) for ts in toks]
+
+    index: dict[str, list[int]] = {}
+    by_link: dict[str, list[int]] = {}
+    edges: list[tuple[int, float, int, int]] = []
+
+    for i, it in enumerate(items):
+        lk = lks[i]
+        seen_j: set[int] = set()
+        for j in by_link.get(lk, ()):
+            if items[j]["source"] != it["source"] and abs(dates[i] - dates[j]) <= DEDUP_WINDOW:
+                edges.append((1, 1.0, i, j))
+                seen_j.add(j)
+
+        cands: dict[int, int] = {}
+        for t in toks[i]:
+            for j in index.get(t, ()):
+                if j not in seen_j:
+                    cands[j] = cands.get(j, 0) + 1
+        for j, shared_cnt in cands.items():
+            if items[j]["source"] == it["source"] or abs(dates[i] - dates[j]) > DEDUP_WINDOW:
+                continue
+            if arxiv_ids[i] and arxiv_ids[j] and arxiv_ids[i] != arxiv_ids[j]:
+                continue
+            if shared_cnt < DEDUP_MIN_SHARED:
+                continue
+            shared_w = sum(idf[t] for t in toks[i] & toks[j])
+            union_w = tok_w[i] + tok_w[j] - shared_w
+            sim = shared_w / union_w if union_w > 0 else 0.0
+            if sim >= DEDUP_JACCARD:
+                edges.append((0, sim, i, j))
+
+        for t in toks[i]:
+            index.setdefault(t, []).append(i)
+        by_link.setdefault(lk, []).append(i)
+
+    # Сначала объединяем точные совпадения ссылок и наиболее близкие заголовки.
+    edges.sort(key=lambda e: (e[0], e[1]), reverse=True)
+
     parent = list(range(n))
+    comp_sources = [{it["source"]} for it in items]
+    comp_min_d = list(dates)
+    comp_max_d = list(dates)
 
     def find(i: int) -> int:
         while parent[i] != i:
@@ -178,33 +253,23 @@ def assign_groups(items: list[dict]) -> int:
             i = parent[i]
         return i
 
-    toks = [title_tokens(it["title"]) for it in items]
-    dates = [datetime.fromisoformat(it["published"]) for it in items]
-    index: dict[str, list[int]] = {}
-    by_link: dict[str, int] = {}
     merges = 0
-    for i, it in enumerate(items):
-        cands: dict[int, int] = {}
-        for t in toks[i]:
-            for j in index.get(t, ()):
-                cands[j] = cands.get(j, 0) + 1
-        lk = link_key(it["link"])
-        if lk in by_link:
-            cands[by_link[lk]] = 10**6  # та же ссылка = точно дубль
-        for j, shared in cands.items():
-            if items[j]["source"] == it["source"] or abs(dates[i] - dates[j]) > DEDUP_WINDOW:
-                continue
-            if shared < 10**6:
-                union = len(toks[i]) + len(toks[j]) - shared
-                if shared < DEDUP_MIN_SHARED or shared / union < DEDUP_JACCARD:
-                    continue
-            ri, rj = find(i), find(j)
-            if ri != rj:
-                parent[max(ri, rj)] = min(ri, rj)
-                merges += 1
-        for t in toks[i]:
-            index.setdefault(t, []).append(i)
-        by_link.setdefault(lk, i)
+    for _is_link, _sim, i, j in edges:
+        ri, rj = find(i), find(j)
+        if ri == rj:
+            continue
+        if comp_sources[ri] & comp_sources[rj]:
+            continue
+        lo = min(comp_min_d[ri], comp_min_d[rj])
+        hi = max(comp_max_d[ri], comp_max_d[rj])
+        if hi - lo > DEDUP_WINDOW:
+            continue
+        root, child_root = (ri, rj) if ri < rj else (rj, ri)
+        parent[child_root] = root
+        comp_sources[root] |= comp_sources[child_root]
+        comp_min_d[root] = lo
+        comp_max_d[root] = hi
+        merges += 1
 
     for it in items:
         it.pop("group", None)
@@ -219,13 +284,47 @@ def assign_groups(items: list[dict]) -> int:
     return merges
 
 
+def _read_url(url: str) -> bytes:
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
+            "Accept-Encoding": "gzip, deflate",
+        },
+    )
+    last_exc: Exception | None = None
+    for attempt in range(2):
+        try:
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
+                raw = resp.read()
+                enc = (resp.headers.get("Content-Encoding") or "").lower()
+                if "gzip" in enc:
+                    raw = gzip.decompress(raw)
+                elif "deflate" in enc:
+                    try:
+                        raw = zlib.decompress(raw)
+                    except zlib.error:
+                        raw = zlib.decompress(raw, -zlib.MAX_WBITS)
+                return raw
+        except urllib.error.HTTPError as exc:
+            last_exc = exc
+            if exc.code < 500 or attempt == 1:
+                raise
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            last_exc = exc
+            if attempt == 1:
+                raise
+        time.sleep(1.5)
+    assert last_exc is not None
+    raise last_exc
+
+
 def fetch_source(src: dict) -> tuple[dict, list[dict]]:
     status = {"id": src["id"], "name": src["name"], "category": src["category"], "ok": False, "count": 0, "error": None,
               "weight": src.get("weight", 1), "family": src.get("family", src["id"])}
     try:
-        req = urllib.request.Request(src["url"], headers={"User-Agent": USER_AGENT, "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*"})
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-            raw = resp.read()
+        raw = _read_url(src["url"])
         entries = parse_feed(raw)
     except Exception as exc:  # noqa: BLE001 — один упавший источник не должен ронять сборку
         status["error"] = f"{type(exc).__name__}: {exc}"[:200]
@@ -292,17 +391,26 @@ def main() -> int:
 
     valid_ids = {s["id"] for s in sources}
     cutoff = now - timedelta(days=KEEP_DAYS)
-    items = [
-        it for it in existing.values()
-        if it["source"] in valid_ids and datetime.fromisoformat(it["published"]) >= cutoff
-    ]
-    # Не показываем «записи из будущего» (кривые даты в фидах) выше реальных.
-    for it in items:
-        if datetime.fromisoformat(it["published"]) > now + timedelta(hours=1):
-            it["published"] = it["first_seen"]
-    items.sort(key=lambda it: it["published"], reverse=True)
-    items = items[:MAX_TOTAL]
-    merges = assign_groups(items)
+    future_limit = now + timedelta(hours=1)
+    dated_items: list[tuple[datetime, dict]] = []
+    for it in existing.values():
+        if it.get("source") not in valid_ids:
+            continue
+        pub = parse_date(it.get("published", "")) or parse_date(it.get("first_seen", ""))
+        if not pub:
+            continue
+        # Не показываем «записи из будущего» (кривые даты в фидах) выше реальных.
+        if pub > future_limit:
+            fs = parse_date(it.get("first_seen", "")) or now
+            it["published"] = fs.isoformat(timespec="seconds")
+            pub = fs
+        if pub >= cutoff:
+            dated_items.append((pub, it))
+
+    dated_items.sort(key=lambda pair: pair[0], reverse=True)
+    dated_items = dated_items[:MAX_TOTAL]
+    items = [it for _, it in dated_items]
+    merges = assign_groups(items, [pub for pub, _ in dated_items])
 
     OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     payload = {"generated_at": now_iso, "sources": statuses, "items": items}

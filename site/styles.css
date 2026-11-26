@@ -66,18 +66,24 @@ input[type="search"], select {
 }
 input[type="search"]:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 .check { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); cursor: pointer; }
+.check:has(input:disabled) { opacity: .55; cursor: not-allowed; }
 .tag-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .chip {
   font: inherit; font-size: 13px; border: 1px solid var(--border); background: var(--surface); color: var(--text);
   border-radius: 999px; padding: 3px 10px; cursor: pointer;
 }
 .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.chip.on .muted { color: rgba(255, 255, 255, .82); }
+.chip:focus-visible, .icon-btn:focus-visible, .star:focus-visible, .more:focus-visible, .tabs a:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
 
 /* Список новостей */
 .list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
 .card {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 12px 14px; border-left: 3px solid var(--cat, var(--border));
+  content-visibility: auto; contain-intrinsic-size: auto 120px;
 }
 .card[data-cat="models"] { --cat: var(--c-models); }
 .card[data-cat="tools"] { --cat: var(--c-tools); }
@@ -122,6 +128,7 @@ input[type="search"]:focus, select:focus { outline: 2px solid var(--accent); out
 .kb {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px;
   display: flex; flex-direction: column; gap: 8px;
+  content-visibility: auto; contain-intrinsic-size: auto 240px;
 }
 .kb h3 { margin: 0; font-size: 17px; }
 .kb .vendor { font-size: 12.5px; color: var(--muted); }
