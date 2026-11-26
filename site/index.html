@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>AI News</title>
   <meta name="description" content="Новости IT и ИИ: модели, инструменты, наука, безопасность — и база знаний.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234f46e5'/><text x='16' y='22' font-size='16' font-family='sans-serif' font-weight='700' text-anchor='middle' fill='white'>AI</text></svg>">
@@ -11,6 +11,21 @@
   <!-- Цвет системной полосы (Safari/Chrome на телефоне); app.js подстраивает его под выбранную на сайте тему. -->
   <meta name="theme-color" id="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-title" content="AI News">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <script>
+    // Полоса с часами в приложении iOS (иконка на экране «Домой»): theme-color там не действует.
+    // Тёмная тема — «прозрачная» полоса (шапка сайта под белыми часами), светлая — стандартная белая.
+    (function () {
+      var t = null;
+      try { t = JSON.parse(localStorage.getItem("theme")); } catch (e) { /* приватный режим */ }
+      var dark = t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+      var m = document.createElement("meta");
+      m.name = "apple-mobile-web-app-status-bar-style"; m.id = "ios-status";
+      m.content = dark ? "black-translucent" : "default";
+      document.head.appendChild(m);
+    })();
+  </script>
   <link rel="stylesheet" href="styles.css">
   <script>
     // Тема оформления применяется до отрисовки, чтобы страница не «мигала» стандартным видом.

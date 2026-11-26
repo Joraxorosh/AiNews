@@ -18,6 +18,13 @@
     const c = getComputedStyle(document.documentElement).getPropertyValue("--surface").trim();
     const meta = document.getElementById("theme-color");
     if (c && meta) meta.setAttribute("content", c);
+    // iOS-приложение читает стиль полосы при запуске — новое значение подействует со следующего открытия.
+    const ios = document.getElementById("ios-status");
+    if (ios) {
+      const t = document.documentElement.dataset.theme;
+      const dark = t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+      ios.setAttribute("content", dark ? "black-translucent" : "default");
+    }
   }
   const applyTheme = (t) => {
     if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;

@@ -47,6 +47,9 @@ a { color: inherit; }
 /* Шапка */
 .top {
   position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border);
+  /* Отступ под часы и «чёлку» iPhone, когда шапка заходит под системную полосу (приложение, тёмная тема). */
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right);
   background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: saturate(1.6) blur(10px);
 }
 .top-row { display: flex; align-items: center; justify-content: space-between; height: 52px; }
