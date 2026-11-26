@@ -857,21 +857,76 @@
       fetchJson("data/weekly.json"),
     ]);
     if (weekly.status === "fulfilled") state.weekly = weekly.value;
-    if (news.status === "fulfilled" && news.value && Array.isArray(news.value.items)) {
-      state.items = news.value.items.map(hydrateItem);
-      state.byId = new Map(state.items.map((it) => [it.id, it]));
-      state.sources = Object.fromEntries((news.value.sources || []).map((s) => [s.id, s]));
-      renderStatus(news.value);
-    } else {
-      state.newsError = true;
-    }
+    if (news.status === "fulfilled" && news.value && Array.isArray(news.value.items)) applyNews(news.value);
+    else state.newsError = true;
     if (kb.status === "fulfilled" && kb.value) { state.kb = prepareKb(kb.value); initKbMatchers(); }
     const w = store.get("watch", "");
     $("watch").value = w; setWatch(w);
     setTab(location.hash.slice(1) || "feed", true);
     if (!navigator.onLine) $("updated").textContent = "нет сети — сохранённые новости";
   }
+  function applyNews(data) {
+    state.items = data.items.map(hydrateItem);
+    state.byId = new Map(state.items.map((it) => [it.id, it]));
+    state.sources = Object.fromEntries((data.sources || []).map((s) => [s.id, s]));
+    state.generatedAt = data.generated_at;
+    state.newsError = false;
+    renderStatus(data);
+  }
   load();
+
+  // ---- Автообновление ----
+  // Приложение на телефоне (особенно на iPhone) не перезапускается, а «просыпается» со старой страницей.
+  // Поэтому при возвращении в приложение и раз в 15 минут проверяем: вышла новая версия сайта — перезагружаемся,
+  // появились свежие новости — подгружаем их (если пользователь листает ленту — по кнопке, чтобы список не прыгал).
+  const CHECK_EVERY = 15 * 60e3, CHECK_ON_RETURN = 3 * 60e3;
+  const buildOf = (s) => (/app\.js\?v=(\w+)/.exec(s || "") || [])[1];
+  const myBuild = buildOf((document.querySelector('script[src*="app.js"]') || {}).src);
+  let lastCheck = Date.now(), checking = false, pending = null;
+  async function checkUpdates() {
+    if (checking || !navigator.onLine) return;
+    checking = true; lastCheck = Date.now();
+    try {
+      if (navigator.serviceWorker) navigator.serviceWorker.getRegistration().then((r) => r && r.update()).catch(() => {});
+      if (myBuild) {
+        const html = await (await fetch("./", { cache: "no-cache" })).text();
+        const fresh = buildOf(html);
+        // Один раз на версию: кэш GitHub Pages может несколько минут отдавать старую страницу.
+        let tried = null;
+        try { tried = sessionStorage.getItem("reloadFor"); } catch { /* приватный режим */ }
+        if (fresh && fresh !== myBuild && tried !== fresh) {
+          try { sessionStorage.setItem("reloadFor", fresh); } catch { /* приватный режим */ }
+          location.reload(); return;
+        }
+      }
+      const data = await fetchJson("data/news.json");
+      if (!Array.isArray(data.items) || data.generated_at === state.generatedAt) return;
+      const known = new Set(state.items.map((it) => it.group || it.id));
+      const added = new Set(data.items.filter((it) => !known.has(it.group || it.id)).map((it) => it.group || it.id)).size;
+      pending = data;
+      if (window.scrollY < 300 || !added) showPending(false);
+      else {
+        $("fresh-pill").textContent = `↑ Свежие новости: ${added}`;
+        $("fresh-pill").hidden = false;
+      }
+    } catch { /* нет сети или сбой — попробуем позже */ }
+    finally { checking = false; }
+  }
+  function showPending(scrollTop) {
+    if (!pending) return;
+    applyNews(pending); pending = null;
+    $("fresh-pill").hidden = true;
+    const y = window.scrollY;
+    if (["kb", "digest", "themes"].includes(state.tab)) setTab(state.tab === "kb" && state.kbFocus ? `kb/${state.kbFocus}` : state.tab, true);
+    else { fillSources(); renderNews(); }
+    window.scrollTo(0, scrollTop ? 0 : y);
+  }
+  $("fresh-pill").addEventListener("click", () => showPending(true));
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && Date.now() - lastCheck > CHECK_ON_RETURN) checkUpdates();
+  });
+  addEventListener("online", checkUpdates);
+  setInterval(() => { if (document.visibilityState === "visible") checkUpdates(); }, CHECK_EVERY);
 
   // Установка как приложение и работа без сети (sw.js). Только по https или на localhost.
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
