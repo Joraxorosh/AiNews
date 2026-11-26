@@ -269,6 +269,17 @@ def fetch_source(src: dict) -> tuple[dict, list[dict]]:
     return status, items
 
 
+# ---- Фильтр по теме: "require": "ai" в sources.json оставляет только записи про ИИ ----
+# (лента «ИИ» Хабра приносит и посторонние статьи — про GTA, финтех, конференции)
+TOPIC_FILTERS = {
+    "ai": re.compile(
+        r"(?<!\w)(ии|ai|нейросет\w*|нейронк\w*|llm\w*|gpt\w*|chatgpt|claude|gemini|gemma|gigachat|yandexgpt|alice ai|"
+        r"deepseek|qwen|llama|mistral|grok|copilot|cursor|codex|openai|anthropic|модел\w*|агент\w*|"
+        r"машинн\w* обучен\w*|ml|deep learning|промпт\w*|prompt\w*|rag|эмбеддинг\w*|трансформер\w*|"
+        r"инференс\w*|токен\w*|вайб\w*|генеративн\w*|чат-?бот\w*|ollama|mcp|fine-?tun\w*|дообучен\w*)(?!\w)", re.I),
+}
+
+
 # ---- Чистка описаний: служебный текст фидов мешает читать ----
 HN_META_RE = re.compile(r"(?:Article URL:\s*\S+\s*)?Comments URL:\s*(?P<url>\S+)\s*Points:\s*(?P<points>\d+)\s*#\s*Comments:\s*(?P<comments>\d+)", re.I)
 SUMMARY_JUNK = [
@@ -328,12 +339,18 @@ def main() -> int:
 
     # Срок хранения — по источнику (keep_days в sources.json): статьи arXiv, например, не нужны 45 дней.
     keep = {s["id"]: s.get("keep_days", KEEP_DAYS) for s in sources}
-    items = [
-        it for it in existing.values()
-        if it["source"] in keep and datetime.fromisoformat(it["published"]) >= now - timedelta(days=keep[it["source"]])
-    ]
-    for it in items:
+    by_id = {s["id"]: s for s in sources}
+    items = []
+    for it in existing.values():
+        src = by_id.get(it["source"])
+        if not src or datetime.fromisoformat(it["published"]) < now - timedelta(days=keep[it["source"]]):
+            continue
         tidy(it)
+        it["category"] = src["category"]  # категорию берём из sources.json: её можно поменять задним числом
+        rx = TOPIC_FILTERS.get(src.get("require", ""))
+        if rx and not rx.search(f"{it['title']} {it['summary']}"):
+            continue
+        items.append(it)
     # Не показываем «записи из будущего» (кривые даты в фидах) выше реальных.
     for it in items:
         if datetime.fromisoformat(it["published"]) > now + timedelta(hours=1):
