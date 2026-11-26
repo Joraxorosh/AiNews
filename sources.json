@@ -1,5 +1,5 @@
 {
-  "_comment": "Список источников. category: models | tools | science | it. max_items — сколько последних записей брать за один прогон. weight — важность источника для дайджеста (по умолчанию 1). family — общее имя для лент одного сайта/компании, чтобы кросс-посты не считались разными источниками.",
+  "_comment": "Список источников. category: models | tools | science | it. max_items — сколько последних записей брать за один прогон. weight — важность источника для дайджеста (по умолчанию 1). family — общее имя для лент одного сайта/компании, чтобы кросс-посты не считались разными источниками. keep_days — сколько дней хранить записи (по умолчанию 45).",
   "sources": [
     { "id": "openai",       "name": "OpenAI News",        "category": "models",  "url": "https://openai.com/news/rss.xml", "weight": 2 },
     { "id": "anthropic",    "name": "Anthropic News",     "category": "models",  "url": "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml", "weight": 2 },
@@ -22,9 +22,9 @@
     { "id": "github-blog",  "name": "GitHub Blog",        "category": "tools",   "url": "https://github.blog/feed/", "weight": 2 },
     { "id": "habr-dev",     "name": "Хабр — лучшее за день", "category": "tools", "url": "https://habr.com/ru/rss/articles/top/daily/?fl=ru", "family": "habr" },
 
-    { "id": "arxiv-ai",     "name": "arXiv cs.AI",        "category": "science", "url": "https://rss.arxiv.org/rss/cs.AI", "max_items": 30 },
-    { "id": "arxiv-cl",     "name": "arXiv cs.CL",        "category": "science", "url": "https://rss.arxiv.org/rss/cs.CL", "max_items": 30 },
-    { "id": "arxiv-lg",     "name": "arXiv cs.LG",        "category": "science", "url": "https://rss.arxiv.org/rss/cs.LG", "max_items": 30 },
+    { "id": "arxiv-ai",     "name": "arXiv cs.AI",        "category": "science", "url": "https://rss.arxiv.org/rss/cs.AI", "max_items": 30, "keep_days": 14 },
+    { "id": "arxiv-cl",     "name": "arXiv cs.CL",        "category": "science", "url": "https://rss.arxiv.org/rss/cs.CL", "max_items": 30, "keep_days": 14 },
+    { "id": "arxiv-lg",     "name": "arXiv cs.LG",        "category": "science", "url": "https://rss.arxiv.org/rss/cs.LG", "max_items": 30, "keep_days": 14 },
     { "id": "google-research","name": "Google Research",  "category": "science", "url": "https://research.google/blog/rss/", "weight": 2, "family": "google" },
     { "id": "bair",         "name": "Berkeley AI Research","category": "science","url": "https://bair.berkeley.edu/blog/feed.xml" },
 

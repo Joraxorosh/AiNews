@@ -44,6 +44,8 @@ python -m http.server 8000 -d site    # открыть http://localhost:8000
 - **Новый источник:** добавьте строку в `sources.json`. Нужна ссылка на RSS/Atom; для релизов GitHub подходит `https://github.com/<owner>/<repo>/releases.atom`.
 - **База знаний:** отредактируйте `site/data/kb.json` (разделы `models`, `tools`, `concepts`).
 - **Теги:** правила лежат в `TAG_RULES` в `scripts/fetch_news.py`.
+- **Срок хранения:** по умолчанию 45 дней, для отдельного источника — `keep_days` в `sources.json` (arXiv — 14 дней).
+- **Чистка описаний:** служебный текст фидов (arXiv, Hacker News, «Читать далее» Хабра) убирается в `tidy()`; у Hacker News сохраняются рейтинг и число комментариев.
 
 ## Планы
 

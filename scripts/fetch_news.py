@@ -12,6 +12,7 @@ import html
 import json
 import re
 import sys
+import time
 import urllib.request
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
@@ -222,14 +223,21 @@ def assign_groups(items: list[dict]) -> int:
 def fetch_source(src: dict) -> tuple[dict, list[dict]]:
     status = {"id": src["id"], "name": src["name"], "category": src["category"], "ok": False, "count": 0, "error": None,
               "weight": src.get("weight", 1), "family": src.get("family", src["id"])}
-    try:
-        req = urllib.request.Request(src["url"], headers={"User-Agent": USER_AGENT, "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*"})
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-            raw = resp.read()
-        entries = parse_feed(raw)
-    except Exception as exc:  # noqa: BLE001 — один упавший источник не должен ронять сборку
-        status["error"] = f"{type(exc).__name__}: {exc}"[:200]
+    req = urllib.request.Request(src["url"], headers={"User-Agent": USER_AGENT, "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*"})
+    entries = None
+    for attempt in (1, 2):  # один повтор: сетевые сбои (обрыв, таймаут) обычно разовые
+        try:
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
+                raw = resp.read()
+            entries = parse_feed(raw)
+            break
+        except Exception as exc:  # noqa: BLE001 — один упавший источник не должен ронять сборку
+            status["error"] = f"{type(exc).__name__}: {exc}"[:200]
+            if attempt == 1:
+                time.sleep(5)
+    if entries is None:
         return status, []
+    status["error"] = None
 
     is_release_feed = src["url"].endswith("/releases.atom")
     product = re.sub(r"\s*\(.*?\)\s*$", "", src["name"])
@@ -261,6 +269,34 @@ def fetch_source(src: dict) -> tuple[dict, list[dict]]:
     return status, items
 
 
+# ---- Чистка описаний: служебный текст фидов мешает читать ----
+HN_META_RE = re.compile(r"(?:Article URL:\s*\S+\s*)?Comments URL:\s*(?P<url>\S+)\s*Points:\s*(?P<points>\d+)\s*#\s*Comments:\s*(?P<comments>\d+)", re.I)
+SUMMARY_JUNK = [
+    re.compile(r"^arXiv:\S+\s+Announce Type:\s*\S+\s+Abstract:\s*", re.I),   # arXiv
+    re.compile(r"\s*Читать далее\s*…?$"),                                     # Хабр
+    re.compile(r"^What's changed\s*", re.I),                                   # релизы GitHub
+]
+
+
+def tidy(it: dict) -> None:
+    """Приводит описание в порядок. Идемпотентна — применяется и к уже сохранённым записям."""
+    s = it.get("summary") or ""
+    if it["source"] == "hn":
+        m = HN_META_RE.search(s)
+        if m:
+            it["points"] = int(m["points"])
+            it["comments"] = int(m["comments"])
+            it["discussion"] = m["url"]
+            s = s[: m.start()]
+        s = re.sub(r"^Article URL:\s*\S+\s*", "", s)
+    for rx in SUMMARY_JUNK:
+        s = rx.sub("", s)
+    s = s.strip()
+    if re.fullmatch(r"https?://\S+", s) or s == it["title"]:
+        s = ""  # описание из одной ссылки или повтор заголовка ничего не добавляет
+    it["summary"] = s
+
+
 def main() -> int:
     sources = json.loads(SOURCES_FILE.read_text(encoding="utf-8"))["sources"]
     now = datetime.now(timezone.utc)
@@ -290,12 +326,14 @@ def main() -> int:
                 new_count += 1
             existing[it["id"]] = it
 
-    valid_ids = {s["id"] for s in sources}
-    cutoff = now - timedelta(days=KEEP_DAYS)
+    # Срок хранения — по источнику (keep_days в sources.json): статьи arXiv, например, не нужны 45 дней.
+    keep = {s["id"]: s.get("keep_days", KEEP_DAYS) for s in sources}
     items = [
         it for it in existing.values()
-        if it["source"] in valid_ids and datetime.fromisoformat(it["published"]) >= cutoff
+        if it["source"] in keep and datetime.fromisoformat(it["published"]) >= now - timedelta(days=keep[it["source"]])
     ]
+    for it in items:
+        tidy(it)
     # Не показываем «записи из будущего» (кривые даты в фидах) выше реальных.
     for it in items:
         if datetime.fromisoformat(it["published"]) > now + timedelta(hours=1):

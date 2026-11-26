@@ -45,6 +45,10 @@ jobs:
             git push
           fi
 
+      # Метка версии у app.js/styles.css: после обновления браузер сразу берёт новые файлы, а не старые из кэша.
+      - name: Cache-busting
+        run: sed -i -E "s/(app\.js|styles\.css)\"/\1?v=${GITHUB_SHA::7}\"/g" site/index.html
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3

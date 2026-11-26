@@ -86,6 +86,15 @@
     return new Date(iso).toLocaleDateString("ru", { day: "numeric", month: "short", year: "numeric" });
   }
   const isNew = (it) => prevVisit && it.first_seen > prevVisit;
+  const dayKey = (iso) => new Date(iso).toDateString();
+  function dayLabel(iso) {
+    const d = new Date(iso), today = new Date();
+    const diff = Math.round((new Date(today.toDateString()) - new Date(d.toDateString())) / 86400e3);
+    if (diff === 0) return "Сегодня";
+    if (diff === 1) return "Вчера";
+    const s = d.toLocaleDateString("ru", { weekday: "long", day: "numeric", month: "long" });
+    return s[0].toUpperCase() + s.slice(1);
+  }
 
   // ---- Вкладки ----
   function setTab(tab) {
@@ -172,25 +181,37 @@
     return m10 === 1 && m100 !== 11 ? one : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? few : many;
   };
 
-  function card(g) {
+  const MAX_TAGS = 3;
+  function hnMeta(it) {
+    if (it.points == null) return "";
+    const c = it.comments || 0;
+    return `<span class="hn" title="Рейтинг на Hacker News">▲ ${it.points}</span>` +
+      (it.discussion ? `<a class="hn" href="${esc(safeUrl(it.discussion))}" target="_blank" rel="noopener noreferrer">${c} ${plural(c, "комментарий", "комментария", "комментариев")}</a>` : "");
+  }
+
+  function card(g, opts = {}) {
     const it = g.main;
     const others = g.others || [];
     const fresh = isNew(it) || others.some(isNew);
     const src = state.sources[it.source];
-    return `<li class="card" data-cat="${esc(it.category)}">
+    // В общей ленте и избранном показываем тему: там перемешаны все разделы.
+    const showCat = opts.showCat && CATS[it.category];
+    return `<li class="card${opts.lead ? " lead" : ""}" data-cat="${esc(it.category)}">
       <div class="row">
         <div class="body">
           <div class="meta">
+            ${showCat ? `<span class="cat">${esc(CATS[it.category])}</span>` : ""}
             <span class="src">${esc(src ? src.name : it.source)}</span>
             <time datetime="${esc(it.published)}" title="${esc(new Date(it.published).toLocaleString("ru"))}">${esc(ago(it.published))}</time>
             ${g.nSources > 1 ? `<span class="badge-hot" title="Об этом пишут несколько источников">${g.nSources} ${plural(g.nSources, "источник", "источника", "источников")}</span>` : ""}
+            ${hnMeta(it)}
             ${fresh ? `<span class="badge-new">новое</span>` : ""}
           </div>
           <h3><a href="${esc(safeUrl(it.link))}" target="_blank" rel="noopener noreferrer">${esc(it.title)}</a></h3>
-          ${it.summary ? `<p>${esc(it.summary)}</p>` : ""}
+          ${it.summary ? `<p class="sum">${esc(it.summary)}</p>` : ""}
           ${others.length ? `<div class="also">Также: ${others.map((o) =>
             `<a href="${esc(safeUrl(o.link))}" target="_blank" rel="noopener noreferrer" title="${esc(o.title)}">${esc(srcName(o))}</a>`).join(", ")}</div>` : ""}
-          ${it.tags.length ? `<div class="tags">${it.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>` : ""}
+          ${it.tags.length ? `<div class="tags">${it.tags.slice(0, MAX_TAGS).map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>` : ""}
         </div>
         <button class="star${state.saved.has(it.id) ? " on" : ""}" data-star="${esc(it.id)}" type="button"
           title="${state.saved.has(it.id) ? "Убрать из избранного" : "В избранное"}" aria-label="Избранное">${state.saved.has(it.id) ? "★" : "☆"}</button>
@@ -208,14 +229,41 @@
     const merged = list.length - groups.length;
     $("count").textContent = `${groups.length} записей` + (merged ? ` · склеено дублей: ${merged}` : "") +
       (newN && !state.onlyNew ? ` · ${newN} новых с прошлого визита` : "");
+    const showCat = state.tab === "feed" || state.tab === "saved";
+    let lastDay = "";
+    const html = groups.slice(0, state.shown).map((g, i) => {
+      const day = dayKey(g.main.published);
+      const sep = state.tab !== "saved" && day !== lastDay ? `<li class="day-sep"><span>${esc(dayLabel(g.main.published))}</span></li>` : "";
+      lastDay = day;
+      return sep + card(g, { showCat, lead: i === 0 && state.tab === "feed" });
+    }).join("");
     $("list").innerHTML = groups.length
-      ? groups.slice(0, state.shown).map(card).join("")
+      ? html
       : `<li class="empty">${state.tab === "saved" ? "Пока пусто — отмечайте новости звёздочкой ☆" : "Ничего не найдено. Попробуйте расширить период или сбросить фильтры."}</li>`;
     $("more").hidden = groups.length <= state.shown;
     $("period").disabled = state.tab === "saved";
   }
 
-  $("q").addEventListener("input", (e) => { state.q = e.target.value; state.shown = PAGE; renderNews(); });
+  let qTimer = 0;  // перерисовываем после паузы в наборе, а не на каждую букву
+  $("q").addEventListener("input", (e) => {
+    clearTimeout(qTimer);
+    qTimer = setTimeout(() => { state.q = e.target.value; state.shown = PAGE; renderNews(); }, 150);
+  });
+  // «/» — сразу в поиск (как на GitHub и в YouTube).
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "/" || e.ctrlKey || e.metaKey || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
+    const box = !$("kb-view").hidden ? $("kb-q") : !$("news-view").hidden ? $("q") : null;
+    if (box) { e.preventDefault(); box.focus(); }
+  });
+  // Лента подгружается сама, когда кнопка «Показать ещё» появляется на экране.
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver((entries) => {
+      if (entries.some((en) => en.isIntersecting) && !$("more").hidden) { state.shown += PAGE; renderNews(); }
+    }, { rootMargin: "600px" }).observe($("more"));
+  }
+  const toTop = $("to-top");
+  window.addEventListener("scroll", () => { toTop.hidden = window.scrollY < 1200; }, { passive: true });
+  toTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
   $("period").addEventListener("change", (e) => { state.period = +e.target.value; state.shown = PAGE; store.set("period", state.period); renderNews(); });
   $("source").addEventListener("change", (e) => { state.source = e.target.value; state.shown = PAGE; renderNews(); });
   $("only-new").addEventListener("change", (e) => { state.onlyNew = e.target.checked; state.shown = PAGE; renderNews(); });
@@ -242,8 +290,10 @@
   const PER_SOURCE = 2;                    // не больше N сюжетов от одного источника в теме
   function score(g) {
     const tags = new Set(g.items.flatMap((x) => x.tags));
+    const points = Math.max(0, ...g.items.map((x) => x.points || 0));
     return 3 * (g.nSources - 1) + 2 * (Math.max(...g.items.map(weight)) - 1) +
-      [...tags].reduce((sum, t) => sum + (TAG_SCORE[t] || 0), 0);
+      [...tags].reduce((sum, t) => sum + (TAG_SCORE[t] || 0), 0) +
+      (points >= 800 ? 3 : points >= 300 ? 2 : 0);   // горячее обсуждение на Hacker News
   }
   function digestSections() {
     const days = state.digestDays;
@@ -273,7 +323,7 @@
       `несколько источников, официальные блоги, релизы и безопасность.`;
     $("digest-list").innerHTML = d.sections.map((s) => `
       <h2 class="digest-h" data-cat="${esc(s.cat)}">${esc(s.title)} <span class="muted small">${s.top.length} из ${s.total}</span></h2>
-      ${s.top.length ? `<ol class="list">${s.top.map(card).join("")}</ol>` : `<p class="muted small">За этот период ничего.</p>`}
+      ${s.top.length ? `<ol class="list">${s.top.map((g) => card(g)).join("")}</ol>` : `<p class="muted small">За этот период ничего.</p>`}
       ${s.total > s.top.length ? `<a class="digest-more small" href="#${esc(s.cat)}">Вся лента «${esc(s.title)}» →</a>` : ""}`).join("");
   }
   $("digest-period").addEventListener("click", (e) => {
