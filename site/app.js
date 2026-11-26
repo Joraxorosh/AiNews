@@ -13,8 +13,18 @@
   };
 
   // ---- Тема ----
-  const applyTheme = (t) => { if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme; };
+  // Цвет системной полосы телефона = цвет шапки сайта в текущей теме (а не системная тема телефона).
+  function syncThemeColor() {
+    const c = getComputedStyle(document.documentElement).getPropertyValue("--surface").trim();
+    const meta = document.getElementById("theme-color");
+    if (c && meta) meta.setAttribute("content", c);
+  }
+  const applyTheme = (t) => {
+    if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+    syncThemeColor();
+  };
   applyTheme(store.get("theme", null));
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncThemeColor);
   $("theme-toggle").addEventListener("click", () => {
     const dark = document.documentElement.dataset.theme
       ? document.documentElement.dataset.theme === "dark"
@@ -109,6 +119,7 @@
     if (id === "default") delete document.documentElement.dataset.skin;
     else { document.documentElement.dataset.skin = id; if (window.__loadSkinFonts) window.__loadSkinFonts(id); }
     store.set("skin", id);
+    syncThemeColor();
   }
   function renderThemes() {
     const cur = currentSkin();
