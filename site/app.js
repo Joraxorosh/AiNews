@@ -32,6 +32,7 @@
   const dtFull = new Intl.DateTimeFormat("ru", { dateStyle: "short", timeStyle: "short" });
   const dtDay = new Intl.DateTimeFormat("ru");
   const dtDayLabel = new Intl.DateTimeFormat("ru", { weekday: "long", day: "numeric", month: "long" });
+  const dtDayMonth = new Intl.DateTimeFormat("ru", { day: "numeric", month: "long" });
   const parseMs = (iso) => {
     const ms = Date.parse(iso);
     return Number.isFinite(ms) ? ms : 0;
@@ -141,8 +142,10 @@
     tab: "feed", items: [], byId: new Map(), sources: {}, kb: null, weekly: null, reviewIdx: 0, newsError: false,
     q: "", period: 7, source: "", onlyNew: false, tag: "", shown: PAGE,
     kbQ: "", kbSection: "", kbFocus: "", digestDays: 1,
-    watch: [], onlyWatch: false,
+    watch: [], onlyWatch: false, hideRead: false,
     lastGroups: [],
+    // Прочитанное — id открытых новостей (на этом устройстве), последние READ_MAX.
+    read: new Set(Array.isArray(store.get("read", null)) ? store.get("read", []) : []),
     // Избранное хранит копии записей: так они не пропадут, когда выпадут из ленты (хранится 45 дней).
     saved: loadSaved(),
   };
@@ -150,6 +153,14 @@
   const prevVisitMs = parseMs(store.get("lastVisit", null));
   store.set("lastVisit", new Date().toISOString());
   const isNew = (it) => prevVisitMs > 0 && it._seenMs > prevVisitMs;
+  const READ_MAX = 3000;
+  const isRead = (it) => state.read.has(it.id);
+  function markRead(id) {
+    if (!id || state.read.has(id)) return;
+    state.read.add(id);
+    if (state.read.size > READ_MAX) state.read = new Set([...state.read].slice(-READ_MAX));
+    store.set("read", [...state.read]);
+  }
 
   if (!prevVisitMs) {
     const cb = $("only-new");
@@ -161,7 +172,7 @@
   let searchTimer = 0;
   let kbSearchTimer = 0;
   function setTab(tab, isInitial = false) {
-    if (tab === "review") { state.digestDays = "review"; tab = "digest"; }  // #review — ссылка сразу на обзор недели
+    if (tab === "review" || tab === "trends") { state.digestDays = tab; tab = "digest"; }  // #review, #trends — сразу нужный режим
     state.kbFocus = "";
     if (tab.startsWith("kb/")) { state.kbFocus = decodeURIComponent(tab.slice(3)); tab = "kb"; }  // #kb/Gemini — одна запись
     if (!["feed", "digest", "saved", "kb", "themes", ...Object.keys(CATS)].includes(tab)) tab = "feed";
@@ -217,6 +228,7 @@
       (!state.source || it.source === state.source) &&
       (!state.onlyNew || isNew(it)) &&
       (!state.onlyWatch || isWatched(it)) &&
+      (!state.hideRead || !isRead(it)) &&
       (ignoreTag || !state.tag || it.tags.includes(state.tag)) &&
       (!q || it._search.includes(q)));
   }
@@ -307,7 +319,8 @@
     const kbs = kbFor(it).slice(0, 3);
     const watched = isWatched(it) || others.some(isWatched);
     const saved = state.saved.has(it.id);
-    return `<li class="card${opts.lead ? " lead" : ""}${watched ? " watched" : ""}" data-cat="${esc(it.category)}">
+    const read = isRead(it) || others.some(isRead);
+    return `<li class="card${opts.lead ? " lead" : ""}${watched ? " watched" : ""}${read ? " read" : ""}" data-cat="${esc(it.category)}">
       <div class="row">
         <div class="body">
           <div class="meta">
@@ -318,10 +331,10 @@
             ${hnMeta(it)}
             ${fresh ? `<span class="badge-new">новое</span>` : ""}
           </div>
-          <h3><a href="${esc(safeUrl(it.link))}" target="_blank" rel="noopener noreferrer">${hl(it.title)}</a></h3>
+          <h3><a href="${esc(safeUrl(it.link))}" target="_blank" rel="noopener noreferrer" data-read="${esc(it.id)}">${hl(it.title)}</a></h3>
           ${it.summary ? `<p class="sum">${hl(it.summary)}</p>` : ""}
           ${others.length ? `<div class="also">Также: ${others.map((o) =>
-            `<a href="${esc(safeUrl(o.link))}" target="_blank" rel="noopener noreferrer" title="${esc(o.title)}">${esc(srcName(o))}</a>`).join(", ")}</div>` : ""}
+            `<a href="${esc(safeUrl(o.link))}" target="_blank" rel="noopener noreferrer" title="${esc(o.title)}" data-read="${esc(o.id)}">${esc(srcName(o))}</a>`).join(", ")}</div>` : ""}
           ${it.tags.length || kbs.length ? `<div class="tags">${it.tags.slice(0, MAX_TAGS).map((t) => `<span class="tag">${esc(t)}</span>`).join("")}${
             kbs.map((k) => `<a class="kb-link" href="${esc(kbHref(k))}" title="Открыть в базе знаний">${esc(k.name)}</a>`).join("")}</div>` : ""}
         </div>
@@ -411,6 +424,20 @@
   $("source").addEventListener("change", (e) => { state.source = e.target.value; state.shown = PAGE; renderNews(); });
   $("only-new").addEventListener("change", (e) => { state.onlyNew = e.target.checked; state.shown = PAGE; renderNews(); });
   $("only-watch").addEventListener("change", (e) => { state.onlyWatch = e.target.checked; state.shown = PAGE; renderNews(); });
+  $("hide-read").addEventListener("change", (e) => {
+    state.hideRead = e.target.checked; store.set("hideRead", state.hideRead); state.shown = PAGE; renderNews();
+  });
+  // Открыли новость (клик, средняя кнопка, Enter) — отмечаем прочитанной и приглушаем карточку на месте.
+  function onOpen(e) {
+    const a = e.target.closest("a[data-read]"); if (!a) return;
+    if (e.type === "auxclick" && e.button !== 1) return;
+    markRead(a.dataset.read);
+    const card = a.closest(".card"); if (card) card.classList.add("read");
+  }
+  for (const id of ["list", "digest-list"]) {
+    $(id).addEventListener("click", onOpen);
+    $(id).addEventListener("auxclick", onOpen);
+  }
   let wTimer = 0;
   $("watch").addEventListener("input", (e) => {
     clearTimeout(wTimer);
@@ -484,6 +511,72 @@
     });
     return { sections, nItems: recent.length, nGroups: groups.length };
   }
+  // ---- Тренды: сколько сюжетов упоминают модель/инструмент/понятие, по дням ----
+  const TREND_DAYS = 14;
+  const TREND_TOP = 8;
+  function trendsData() {
+    const today = new Date(new Date().toDateString()).getTime();
+    const start = today - (TREND_DAYS - 1) * 86400e3;
+    const dayIdx = (ms) => Math.round((new Date(new Date(ms).toDateString()).getTime() - start) / 86400e3);
+    const per = new Map();   // запись базы знаний -> массив множеств сюжетов по дням
+    let firstMs = Infinity;
+    for (const it of state.items) {
+      // Статьи arXiv и автоматические релизы с GitHub (gh-*) заглушили бы то, о чём пишут люди.
+      if (it.source.startsWith("arxiv") || it.source.startsWith("gh-")) continue;
+      const d = dayIdx(it._pubMs);
+      if (d < 0 || d >= TREND_DAYS) continue;
+      if (it._pubMs < firstMs) firstMs = it._pubMs;
+      const key = it.group || it.id;
+      for (const k of kbFor(it)) {
+        if (!per.has(k)) per.set(k, Array.from({ length: TREND_DAYS }, () => new Set()));
+        per.get(k)[d].add(key);
+      }
+    }
+    const rows = [...per.entries()].map(([k, days]) => {
+      const counts = days.map((set) => set.size);
+      const week = counts.slice(-7).reduce((a, b) => a + b, 0);
+      const prev = counts.slice(-14, -7).reduce((a, b) => a + b, 0);
+      return { k, counts, week, prev, total: week + prev };
+    }).filter((r) => r.week > 0);
+    const bySection = (sec) => rows.filter((r) => r.k.section === sec)
+      .sort((a, b) => (b.week - a.week) || (b.total - a.total) || a.k.name.localeCompare(b.k.name)).slice(0, TREND_TOP);
+    return { start, firstMs, sections: [["models", "Модели"], ["tools", "Инструменты"], ["concepts", "Понятия"]].map(([id, title]) => ({ id, title, rows: bySection(id) })) };
+  }
+  // Мини-график: TREND_DAYS столбиков, общий масштаб внутри раздела, подсказка на каждом столбике.
+  function sparkSvg(counts, max, start) {
+    const W = 8, GAP = 2, H = 30, n = counts.length;
+    const bars = counts.map((c, i) => {
+      const h = c ? Math.max(3, Math.round((c / max) * H)) : 0;
+      const x = i * (W + GAP);
+      const date = dtDayLabel.format(new Date(start + i * 86400e3));
+      const tip = `${date}: ${c} ${plural(c, "сюжет", "сюжета", "сюжетов")}`;
+      return `<g><title>${esc(tip)}</title><rect class="hit" x="${x}" y="0" width="${W + GAP}" height="${H}"></rect>` +
+        (h ? `<path class="bar${i >= n - 7 ? " recent" : ""}" d="M${x},${H} v-${h - 3} q0,-3 3,-3 h${W - 6} q3,0 3,3 v${h - 3} z"></path>` : "") + `</g>`;
+    }).join("");
+    return `<svg class="spark" viewBox="0 0 ${n * (W + GAP) - GAP} ${H}" width="${n * (W + GAP) - GAP}" height="${H}" role="img" aria-label="Сюжеты по дням">${bars}<line class="base" x1="0" y1="${H}" x2="${n * (W + GAP)}" y2="${H}"></line></svg>`;
+  }
+  function renderTrends() {
+    const t = trendsData();
+    const since = Number.isFinite(t.firstMs) ? dtDayMonth.format(t.firstMs) : "";
+    $("digest-note").textContent = `Сколько сюжетов за ${TREND_DAYS} дней упоминают модели, инструменты и понятия из базы знаний ` +
+      `(дубли склеены, без arXiv и автоматических релизов GitHub). Яркие столбики — последние 7 дней.` + (since && t.firstMs > t.start ? ` Лента собирается с ${since}.` : "");
+    $("digest-list").innerHTML = t.sections.map((sec) => {
+      if (!sec.rows.length) return "";
+      const max = Math.max(...sec.rows.flatMap((r) => r.counts), 1);
+      return `<h2 class="digest-h">${esc(sec.title)}</h2>
+        <table class="trends"><colgroup><col><col class="c-spark"><col class="c-num"><col class="c-delta"></colgroup><thead><tr><th>Название</th><th>По дням</th><th class="num">7 дней</th><th class="num">К прошлой неделе</th></tr></thead><tbody>
+        ${sec.rows.map((r) => {
+          const d = r.week - r.prev;
+          return `<tr>
+            <td><a href="${esc(kbHref(r.k))}">${esc(r.k.name)}</a></td>
+            <td>${sparkSvg(r.counts, max, t.start)}</td>
+            <td class="num"><b>${r.week}</b></td>
+            <td class="num delta">${d > 0 ? `↑︎ +${d}` : d < 0 ? `↓︎ −${-d}` : "="}</td>
+          </tr>`;
+        }).join("")}</tbody></table>`;
+    }).join("") || `<p class="empty">Пока мало данных для трендов.</p>`;
+  }
+
   // ---- Обзор недели: связный текст на русском из data/weekly.json (пишется вручную) ----
   function renderReview() {
     const issues = (state.weekly && state.weekly.issues) || [];
@@ -520,6 +613,7 @@
       b.setAttribute("aria-pressed", String(on));
     });
     if (state.digestDays === "review") { renderReview(); return; }
+    if (state.digestDays === "trends") { renderTrends(); return; }
     if (state.newsError) {
       $("digest-note").textContent = "";
       $("digest-list").innerHTML = `<p class="empty">Не удалось загрузить новости. Если вы открыли файл напрямую, запустите локальный сервер (см. README).</p>`;
@@ -536,13 +630,21 @@
   }
   $("digest-period").addEventListener("click", (e) => {
     const b = e.target.closest("[data-days]"); if (!b) return;
-    state.digestDays = b.dataset.days === "review" ? "review" : +b.dataset.days === 7 ? 7 : 1;
+    state.digestDays = ["review", "trends"].includes(b.dataset.days) ? b.dataset.days : +b.dataset.days === 7 ? 7 : 1;
     store.set("digestDays", state.digestDays); renderDigest();
   });
   $("digest-note").addEventListener("change", (e) => {
     if (e.target.id === "review-pick") { state.reviewIdx = +e.target.value; renderReview(); }
   });
   $("digest-copy").addEventListener("click", async () => {
+    if (state.digestDays === "trends") {
+      const t = trendsData();
+      return copyText([`Тренды IT/ИИ за ${TREND_DAYS} дней (${dtDay.format(Date.now())}), сюжетов за 7 дней:`,
+        ...t.sections.filter((x) => x.rows.length).map((x) => `\n${x.title}\n` + x.rows.map((r) => {
+          const d = r.week - r.prev;
+          return `• ${r.k.name}: ${r.week} (${d > 0 ? "+" + d : d < 0 ? "−" + -d : "без изменений"})`;
+        }).join("\n"))].join("\n"));
+    }
     if (state.digestDays === "review") {
       const issues = (state.weekly && state.weekly.issues) || [];
       if (!issues.length) return;
@@ -653,7 +755,9 @@
     const storedPeriod = Number(store.get("period", 7));
     state.period = VALID_PERIODS.has(storedPeriod) ? storedPeriod : 7;
     const dd = store.get("digestDays", 1);
-    state.digestDays = dd === 7 || dd === "review" ? dd : 1;
+    state.digestDays = [7, "review", "trends"].includes(dd) ? dd : 1;
+    state.hideRead = store.get("hideRead", false) === true;
+    $("hide-read").checked = state.hideRead;
     $("period").value = String(state.period);
     const [news, kb, weekly] = await Promise.allSettled([
       fetchJson("data/news.json"),
@@ -673,6 +777,12 @@
     const w = store.get("watch", "");
     $("watch").value = w; setWatch(w);
     setTab(location.hash.slice(1) || "feed", true);
+    if (!navigator.onLine) $("updated").textContent = "нет сети — сохранённые новости";
   }
   load();
+
+  // Установка как приложение и работа без сети (sw.js). Только по https или на localhost.
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+    addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => { /* без офлайна — не страшно */ }));
+  }
 })();

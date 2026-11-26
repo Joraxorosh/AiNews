@@ -6,6 +6,11 @@
   <title>AI News</title>
   <meta name="description" content="Новости IT и ИИ: модели, инструменты, наука, безопасность — и база знаний.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234f46e5'/><text x='16' y='22' font-size='16' font-family='sans-serif' font-weight='700' text-anchor='middle' fill='white'>AI</text></svg>">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1a1c25" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-title" content="AI News">
   <link rel="stylesheet" href="styles.css">
   <script>
     // Тема оформления применяется до отрисовки, чтобы страница не «мигала» стандартным видом.
@@ -63,6 +68,7 @@
         </select>
         <select id="source" aria-label="Источник"><option value="">Все источники</option></select>
         <label class="check"><input type="checkbox" id="only-new"> только новое</label>
+        <label class="check" title="Прочитанное — новости, которые вы открывали на этом устройстве"><input type="checkbox" id="hide-read"> скрыть прочитанное</label>
       </div>
       <div class="watch-row">
         <label for="watch" class="watch-label" title="Новости с этими словами подсвечиваются в ленте">Мои темы</label>
@@ -82,6 +88,7 @@
           <button class="chip" data-days="1" type="button">За сутки</button>
           <button class="chip" data-days="7" type="button">За неделю</button>
           <button class="chip" data-days="review" type="button">Обзор недели</button>
+          <button class="chip" data-days="trends" type="button">Тренды</button>
         </div>
         <button id="digest-copy" class="chip" type="button" title="Скопировать дайджест как текст, чтобы переслать">Скопировать текстом</button>
       </div>

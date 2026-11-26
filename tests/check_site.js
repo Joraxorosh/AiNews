@@ -53,6 +53,17 @@ if (weekly) {
   }
 }
 
+// Приложение (PWA): манифест и иконки
+const man = readJson("site/manifest.webmanifest");
+if (man) {
+  if (!man.name || !man.start_url) fail("manifest: нет name/start_url");
+  for (const ic of man.icons || []) {
+    if (!fs.existsSync(path.join(root, "site", ic.src))) fail(`manifest: нет файла иконки ${ic.src}`);
+  }
+}
+if (!/const BUILD = "__BUILD__"/.test(fs.readFileSync(path.join(root, "site/sw.js"), "utf8")))
+  fail("sw.js: метка __BUILD__ не найдена — номер сборки не подставится");
+
 // Новости и источники
 const news = readJson("site/data/news.json");
 if (news && !Array.isArray(news.items)) fail("news.json: нет массива items");

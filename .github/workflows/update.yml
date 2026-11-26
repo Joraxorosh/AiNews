@@ -58,8 +58,11 @@ jobs:
           fi
 
       # Метка версии у app.js/styles.css: после обновления браузер сразу берёт новые файлы, а не старые из кэша.
+      # Номер сборки в sw.js: новая версия сервис-воркера сбрасывает старый офлайн-кэш.
       - name: Cache-busting
-        run: sed -i -E "s/(app\.js|styles\.css)\"/\1?v=${GITHUB_SHA::7}\"/g" site/index.html
+        run: |
+          sed -i -E "s/(app\.js|styles\.css)\"/\1?v=${GITHUB_SHA::7}\"/g" site/index.html
+          sed -i "s/__BUILD__/${GITHUB_SHA::7}/" site/sw.js
 
       - uses: actions/configure-pages@v5
 

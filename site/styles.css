@@ -186,6 +186,36 @@ mark { background: color-mix(in srgb, var(--star) 35%, transparent); color: inhe
 .kb .links { display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; margin-top: auto; padding-top: 4px; }
 .kb .links a { color: var(--accent); }
 
+/* Прочитанное: приглушаем, но оставляем читаемым */
+.card.read { opacity: .62; }
+.card.read:hover, .card.read:focus-within { opacity: 1; }
+.card.read h3 a { color: var(--muted); }
+
+/* Тренды */
+.trends { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.trends th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.trends td { padding: 6px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.trends tr:last-child td { border-bottom: none; }
+.trends td a { color: var(--text); text-decoration: none; font-weight: 500; }
+.trends td a:hover { color: var(--accent); text-decoration: underline; }
+.trends .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.trends .delta { color: var(--text-2); }
+.trends .c-spark { width: 170px; }
+.trends .c-num { width: 80px; }
+.trends .c-delta { width: 150px; }
+.trends td:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spark { display: block; overflow: visible; }
+.spark .bar { fill: color-mix(in srgb, var(--accent) 38%, transparent); }
+.spark .bar.recent { fill: var(--accent); }
+.spark .hit { fill: transparent; }
+.spark g:hover .bar { fill: var(--text); }
+.spark .base { stroke: var(--border); stroke-width: 1; }
+@media (max-width: 560px) {
+  .trends th:nth-child(4), .trends td:nth-child(4), .trends .c-delta { display: none; }
+  .trends .c-num { width: 56px; }
+  .trends td, .trends th { padding: 6px 8px; }
+}
+
 /* Обзор недели */
 .review {
   background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 26px; margin-bottom: 24px;
@@ -371,3 +401,12 @@ mark { background: color-mix(in srgb, var(--star) 35%, transparent); color: inhe
 [data-skin="paper"] .kb-link::before { content: "→ "; }
 [data-skin="paper"] #watch { border-radius: 0; background: transparent; font-family: var(--serif); }
 [data-skin="paper"] .card.watched { background: none; border-bottom-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); padding-left: 10px; }
+
+/* Газета: прочитанное и тренды */
+[data-skin="paper"] .card.read { opacity: .55; }
+[data-skin="paper"] .trends { background: none; border: none; border-radius: 0; border-top: 1px solid var(--ink); }
+[data-skin="paper"] .trends th { font-family: var(--serif); text-transform: uppercase; letter-spacing: .03em; font-size: 11px; color: var(--text); }
+[data-skin="paper"] .trends .c-delta { width: 175px; }
+[data-skin="paper"] .trends td a { font-family: var(--display); font-weight: 700; }
+[data-skin="paper"] .spark .bar { fill: color-mix(in srgb, var(--ink) 30%, transparent); }
+[data-skin="paper"] .spark .bar.recent { fill: var(--ink); }

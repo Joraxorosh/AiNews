@@ -1,0 +1,20 @@
+{
+  "name": "AI News — новости IT и ИИ",
+  "short_name": "AI News",
+  "description": "Новости IT и ИИ: модели, инструменты, наука, безопасность — дайджест, обзор недели и база знаний.",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f7f9",
+  "theme_color": "#4f46e5",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Дайджест", "url": "./#digest", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Обзор недели", "url": "./#review", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
