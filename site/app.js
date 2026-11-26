@@ -884,7 +884,7 @@
   const CHECK_EVERY = 15 * 60e3, CHECK_ON_RETURN = 3 * 60e3;
   const buildOf = (s) => (/app\.js\?v=(\w+)/.exec(s || "") || [])[1];
   const myBuild = buildOf((document.querySelector('script[src*="app.js"]') || {}).src);
-  // Номер версии внизу страницы — чтобы на телефоне было видно, обновилось ли приложение.
+  // Номер версии на вкладке «Оформление» — чтобы на телефоне было видно, обновилось ли приложение.
   $("build").innerHTML = myBuild
     ? `Версия сайта: <a href="https://github.com/Joraxorosh/AiNews/commit/${esc(myBuild)}" target="_blank" rel="noopener noreferrer">${esc(myBuild)}</a>`
     : "Версия сайта: локальная";

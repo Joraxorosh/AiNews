@@ -287,7 +287,7 @@ mark.q { background: color-mix(in srgb, var(--accent) 22%, transparent); padding
 .foot { padding: 20px 16px 40px; font-size: 13px; color: var(--muted); }
 .foot ul { columns: 2 220px; padding-left: 18px; }
 .foot .err { color: var(--c-it); }
-.build { margin: 10px 0 0; font-size: 12px; }
+.build { margin: 18px 0 0; font-size: 13px; }
 .build a { color: inherit; }
 
 @media (max-width: 560px) {
