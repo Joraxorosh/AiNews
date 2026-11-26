@@ -38,7 +38,8 @@ TAG_RULES: list[tuple[str, re.Pattern]] = [
     ("релиз", re.compile(r"\b(release[sd]?|launch\w*|introduc\w+|announc\w+|now available|general availability|"
                         r"релиз\w*|выпус\w*|представил\w*|запуст\w*|v\d+\.\d+)", re.I)),
     ("безопасность", re.compile(r"\b(cve-\d+|vulnerab\w*|exploit\w*|zero-day|0-day|malware|ransomware|breach\w*|"
-                               r"phishing|backdoor|уязвим\w*|взлом\w*|утечк\w*|вредонос\w*)", re.I)),
+                               r"phishing|backdoor|hack(?:ed|ers?|ing)\b|stolen|stole\b|credentials?\b|"
+                               r"уязвим\w*|взлом\w*|утечк\w*|вредонос\w*|хакер\w*|кибератак\w*)", re.I)),
     ("баг/сбой", re.compile(r"\b(bug\w*|outage\w*|incident\w*|regression\w*|crash\w*|downtime|deprecat\w*|"
                            r"сбо[йя]\w*|ошибк\w*|баг\w*)", re.I)),
     ("open source", re.compile(r"\b(open[- ]source|open[- ]weight\w*|apache 2|mit licen\w*|открыт\w* (код|вес)\w*)", re.I)),
@@ -280,6 +281,29 @@ TOPIC_FILTERS = {
 }
 
 
+# ---- Тема по содержанию: для смешанных источников ("auto_category": true в sources.json) ----
+# Hacker News, Ars, «Хабр — лучшее» пишут обо всём; раскладываем по тексту, иначе — категория источника.
+MODEL_RE = re.compile(
+    r"(?<!\w)(gpt-?\d[\w.-]*|chatgpt|claude|gemini|gemma|llama|qwen|deepseek|mistral|grok|gigachat|yandexgpt|alice ai|"
+    r"kimi|glm-?\d[\w.]*|nemotron|muse spark|openai|anthropic|deepmind|llm\w*|нейросет\w*|языков\w* модел\w*|"
+    r"language models?|frontier model\w*|open[- ]weights?|reasoning model\w*)(?!\w)", re.I)
+AI_TOOL_RE = re.compile(
+    r"(?<!\w)(claude code|copilot|cursor|codex|cline|aider|windsurf|antigravity|ollama|vllm|llama\.cpp|lm studio|"
+    r"langchain|langgraph|llamaindex|mcp|agent sdk|coding agents?|ии-агент\w*|ai agents?|вайб-?кодинг\w*|vibe[- ]coding)(?!\w)",
+    re.I)
+
+
+def auto_category(it: dict, default: str) -> str:
+    hay = f"{it['title']} {it['summary']}"
+    if "безопасность" in it.get("tags", []):
+        return "it"
+    if AI_TOOL_RE.search(hay):
+        return "tools"
+    if MODEL_RE.search(hay):
+        return "models"
+    return default
+
+
 # ---- Чистка описаний: служебный текст фидов мешает читать ----
 HN_META_RE = re.compile(r"(?:Article URL:\s*\S+\s*)?Comments URL:\s*(?P<url>\S+)\s*Points:\s*(?P<points>\d+)\s*#\s*Comments:\s*(?P<comments>\d+)", re.I)
 SUMMARY_JUNK = [
@@ -346,7 +370,11 @@ def main() -> int:
         if not src or datetime.fromisoformat(it["published"]) < now - timedelta(days=keep[it["source"]]):
             continue
         tidy(it)
-        it["category"] = src["category"]  # категорию берём из sources.json: её можно поменять задним числом
+        # Категорию и теги пересчитываем и для сохранённых записей: правки правил применяются ко всей ленте.
+        it["tags"] = tags_for(it["title"], it["summary"], src["category"])
+        if src["url"].endswith("/releases.atom") and "релиз" not in it["tags"]:
+            it["tags"].insert(0, "релиз")
+        it["category"] = auto_category(it, src["category"]) if src.get("auto_category") else src["category"]
         rx = TOPIC_FILTERS.get(src.get("require", ""))
         if rx and not rx.search(f"{it['title']} {it['summary']}"):
             continue

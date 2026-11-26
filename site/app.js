@@ -63,7 +63,7 @@
 
   // ---- Состояние ----
   const state = {
-    tab: "feed", items: [], sources: {}, kb: null,
+    tab: "feed", items: [], sources: {}, kb: null, weekly: null, reviewIdx: 0,
     q: "", period: 7, source: "", onlyNew: false, tag: "", shown: PAGE,
     kbQ: "", kbSection: "", digestDays: 1,
     // Избранное хранит копии записей: так они не пропадут, когда выпадут из ленты (хранится 45 дней).
@@ -98,6 +98,7 @@
 
   // ---- Вкладки ----
   function setTab(tab) {
+    if (tab === "review") { state.digestDays = "review"; tab = "digest"; }  // #review — ссылка сразу на обзор недели
     if (!["feed", "digest", "saved", "kb", "themes", ...Object.keys(CATS)].includes(tab)) tab = "feed";
     state.tab = tab; state.shown = PAGE; state.tag = "";
     document.querySelectorAll("#tabs a").forEach((a) => a.classList.toggle("active", a.dataset.tab === tab));
@@ -316,8 +317,38 @@
     });
     return { sections, nItems: recent.length, nGroups: groups.length };
   }
+  // ---- Обзор недели: связный текст на русском из data/weekly.json (пишется вручную) ----
+  function renderReview() {
+    const issues = (state.weekly && state.weekly.issues) || [];
+    if (!issues.length) {
+      $("digest-note").textContent = "";
+      $("digest-list").innerHTML = `<p class="empty">Обзоров пока нет.</p>`;
+      return;
+    }
+    const idx = Math.min(state.reviewIdx, issues.length - 1);
+    const is = issues[idx];
+    $("digest-note").innerHTML = issues.length > 1
+      ? `<label>Выпуск: <select id="review-pick">${issues.map((x, i) =>
+          `<option value="${i}"${i === idx ? " selected" : ""}>${esc(x.title)}</option>`).join("")}</select></label>`
+      : `Опубликовано ${esc(new Date(is.published).toLocaleDateString("ru", { day: "numeric", month: "long", year: "numeric" }))}`;
+    $("digest-list").innerHTML = `<article class="review">
+      <h2 class="review-title">${esc(is.title)}</h2>
+      <p class="review-intro">${esc(is.intro)}</p>
+      ${is.sections.map((sec) => `
+        <h3 class="review-h">${esc(sec.title)}</h3>
+        <ul class="review-points">${sec.points.map((pt) => `<li>
+          <p>${esc(pt.text)}</p>
+          ${pt.links && pt.links.length ? `<div class="review-links">${pt.links.map((l) =>
+            `<a href="${esc(safeUrl(l.url))}" target="_blank" rel="noopener noreferrer">${esc(l.title)}</a>`).join("")}</div>` : ""}
+        </li>`).join("")}</ul>`).join("")}
+    </article>`;
+  }
+  const reviewText = (is) => [is.title, "", is.intro, ...is.sections.map((sec) =>
+    `\n${sec.title}\n` + sec.points.map((pt) => `• ${pt.text}` + (pt.links && pt.links[0] ? `\n  ${pt.links[0].url}` : "")).join("\n"))].join("\n");
+
   function renderDigest() {
-    document.querySelectorAll("#digest-period [data-days]").forEach((b) => b.classList.toggle("on", +b.dataset.days === state.digestDays));
+    document.querySelectorAll("#digest-period [data-days]").forEach((b) => b.classList.toggle("on", b.dataset.days === String(state.digestDays)));
+    if (state.digestDays === "review") { renderReview(); return; }
     const d = digestSections();
     $("digest-note").textContent = `${d.nItems} записей → ${d.nGroups} сюжетов после склейки дублей. Выше — то, о чём пишут ` +
       `несколько источников, официальные блоги, релизы и безопасность.`;
@@ -328,19 +359,30 @@
   }
   $("digest-period").addEventListener("click", (e) => {
     const b = e.target.closest("[data-days]"); if (!b) return;
-    state.digestDays = +b.dataset.days; store.set("digestDays", state.digestDays); renderDigest();
+    state.digestDays = b.dataset.days === "review" ? "review" : +b.dataset.days;
+    store.set("digestDays", state.digestDays); renderDigest();
+  });
+  $("digest-note").addEventListener("change", (e) => {
+    if (e.target.id === "review-pick") { state.reviewIdx = +e.target.value; renderReview(); }
   });
   $("digest-copy").addEventListener("click", async () => {
+    if (state.digestDays === "review") {
+      const issues = (state.weekly && state.weekly.issues) || [];
+      if (!issues.length) return;
+      return copyText(reviewText(issues[Math.min(state.reviewIdx, issues.length - 1)]));
+    }
     const d = digestSections();
     const head = `Дайджест IT/ИИ ${state.digestDays === 1 ? "за сутки" : "за неделю"} (${new Date().toLocaleDateString("ru")})`;
     const parts = d.sections.filter((s) => s.top.length).map((s) =>
       `\n${s.title}\n` + s.top.map((g) => `• ${g.main.title}${g.nSources > 1 ? ` [${g.nSources} ист.]` : ""}\n  ${g.main.link}`).join("\n"));
-    const text = [head, ...parts].join("\n");
+    copyText([head, ...parts].join("\n"));
+  });
+  async function copyText(text) {
     const btn = $("digest-copy");
     try { await navigator.clipboard.writeText(text); btn.textContent = "Скопировано ✓"; }
     catch { btn.textContent = "Не удалось скопировать"; }
     setTimeout(() => { btn.textContent = "Скопировать текстом"; }, 2000);
-  });
+  }
 
   // ---- База знаний ----
   function renderKb() {
@@ -387,12 +429,15 @@
   async function load() {
     renderEdition();
     state.period = store.get("period", 7);
-    state.digestDays = store.get("digestDays", 1) === 7 ? 7 : 1;
+    const dd = store.get("digestDays", 1);
+    state.digestDays = dd === 7 || dd === "review" ? dd : 1;
     $("period").value = String(state.period);
-    const [news, kb] = await Promise.allSettled([
+    const [news, kb, weekly] = await Promise.allSettled([
       fetch("data/news.json", { cache: "no-cache" }).then((r) => r.json()),
       fetch("data/kb.json", { cache: "no-cache" }).then((r) => r.json()),
+      fetch("data/weekly.json", { cache: "no-cache" }).then((r) => r.json()),
     ]);
+    if (weekly.status === "fulfilled") state.weekly = weekly.value;
     if (news.status === "fulfilled") {
       state.items = news.value.items;
       state.sources = Object.fromEntries(news.value.sources.map((s) => [s.id, s]));

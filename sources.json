@@ -1,5 +1,5 @@
 {
-  "_comment": "Список источников. category: models | tools | science | it. max_items — сколько последних записей брать за один прогон. weight — важность источника для дайджеста (по умолчанию 1). family — общее имя для лент одного сайта/компании, чтобы кросс-посты не считались разными источниками. keep_days — сколько дней хранить записи (по умолчанию 45). require: ai — оставлять только записи про ИИ.",
+  "_comment": "Список источников. category: models | tools | science | it. max_items — сколько последних записей брать за один прогон. weight — важность источника для дайджеста (по умолчанию 1). family — общее имя для лент одного сайта/компании, чтобы кросс-посты не считались разными источниками. keep_days — сколько дней хранить записи (по умолчанию 45). require: ai — оставлять только записи про ИИ. auto_category — тему определять по тексту новости (для смешанных источников).",
   "sources": [
     { "id": "openai",       "name": "OpenAI News",        "category": "models",  "url": "https://openai.com/news/rss.xml", "weight": 2 },
     { "id": "anthropic",    "name": "Anthropic News",     "category": "models",  "url": "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml", "weight": 2 },
@@ -20,7 +20,7 @@
     { "id": "gh-langchain", "name": "LangChain (релизы)", "category": "tools",   "url": "https://github.com/langchain-ai/langchain/releases.atom", "max_items": 10 },
     { "id": "gh-vscode",    "name": "VS Code (релизы)",   "category": "tools",   "url": "https://github.com/microsoft/vscode/releases.atom", "max_items": 5 },
     { "id": "github-blog",  "name": "GitHub Blog",        "category": "tools",   "url": "https://github.blog/feed/", "weight": 2 },
-    { "id": "habr-dev",     "name": "Хабр — лучшее за день", "category": "it", "url": "https://habr.com/ru/rss/articles/top/daily/?fl=ru", "family": "habr" },
+    { "id": "habr-dev",     "name": "Хабр — лучшее за день", "category": "it", "url": "https://habr.com/ru/rss/articles/top/daily/?fl=ru", "family": "habr", "auto_category": true },
 
     { "id": "arxiv-ai",     "name": "arXiv cs.AI",        "category": "science", "url": "https://rss.arxiv.org/rss/cs.AI", "max_items": 30, "keep_days": 14 },
     { "id": "arxiv-cl",     "name": "arXiv cs.CL",        "category": "science", "url": "https://rss.arxiv.org/rss/cs.CL", "max_items": 30, "keep_days": 14 },
@@ -28,8 +28,8 @@
     { "id": "google-research","name": "Google Research",  "category": "science", "url": "https://research.google/blog/rss/", "weight": 2, "family": "google" },
     { "id": "bair",         "name": "Berkeley AI Research","category": "science","url": "https://bair.berkeley.edu/blog/feed.xml" },
 
-    { "id": "hn",           "name": "Hacker News (200+)", "category": "it",      "url": "https://hnrss.org/frontpage?points=200", "max_items": 30 },
-    { "id": "ars",          "name": "Ars Technica",       "category": "it",      "url": "https://feeds.arstechnica.com/arstechnica/technology-lab" },
+    { "id": "hn",           "name": "Hacker News (200+)", "category": "it",      "url": "https://hnrss.org/frontpage?points=200", "max_items": 30, "auto_category": true },
+    { "id": "ars",          "name": "Ars Technica",       "category": "it",      "url": "https://feeds.arstechnica.com/arstechnica/technology-lab", "auto_category": true },
     { "id": "thehackernews","name": "The Hacker News (security)", "category": "it", "url": "https://feeds.feedburner.com/TheHackersNews" },
     { "id": "bleeping",     "name": "BleepingComputer",   "category": "it",      "url": "https://www.bleepingcomputer.com/feed/" },
     { "id": "krebs",        "name": "Krebs on Security",  "category": "it",      "url": "https://krebsonsecurity.com/feed/" }

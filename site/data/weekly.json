@@ -1,0 +1,171 @@
+{
+  "_comment": "Обзоры недели на русском. Пишутся вручную (через Claude Code) по ленте news.json; новый выпуск добавляется в начало списка issues.",
+  "issues": [
+    {
+      "id": "2026-11-26",
+      "title": "Обзор недели: 19–26 ноября 2026",
+      "published": "2026-11-26",
+      "intro": "Неделя средних моделей и агентов для кода. Google выпустила Gemini 4 Neon, Сбер — GigaChat 4, у Z.ai и Thinking Machines вышли модели с «зацикленными» слоями. Anthropic запустила Claude Ship, а OpenAI с Cisco — защитный Shirudo для Linux. В безопасности главное — взлом 1Password и атака на серверы Check Point.",
+      "sections": [
+        {
+          "title": "Модели",
+          "points": [
+            {
+              "text": "Google выпустила Gemini 4 Neon — среднюю модель линейки. По независимым замерам, о которых пишут на Хабре, она обогнала флагман Gemini 4 Carbon. Разбор всей линейки (Hydrogen, Neon, Carbon, Argon) — в статье на Хабре.",
+              "links": [
+                {"title": "DeepMind", "url": "https://deepmind.google/blog/introducing-gemini-4-neon/"},
+                {"title": "Хабр: Neon обогнала флагман", "url": "https://habr.com/ru/articles/1112168/"},
+                {"title": "Хабр: какую Gemini 4 выбрать", "url": "https://habr.com/ru/companies/gptunnel/articles/1112424/"}
+              ]
+            },
+            {
+              "text": "Сбер представил GigaChat 4 — две модели, на 37 и 708 млрд параметров. Обе поддерживают контекст до миллиона токенов, работают с инструментами и умеют отвечать в двух режимах: быстро (instant) или с рассуждением (reasoning).",
+              "links": [{"title": "Хабр", "url": "https://habr.com/ru/companies/sberbank/articles/1112118/"}]
+            },
+            {
+              "text": "Z.ai выпустила GLM-5.4 — свою первую модель на «зацикленном» трансформере (loop transformer) с упором на код. Похожий подход у Inkling 2 Mini от Thinking Machines: 26 млрд параметров, из них 5,4 млрд активных, — её уже поддерживают Ollama и Transformers.",
+              "links": [
+                {"title": "GLM-5.4 (Simon Willison)", "url": "https://simonwillison.net/2026/Nov/23/glm-54/"},
+                {"title": "Inkling 2 Mini (Hugging Face)", "url": "https://huggingface.co/blog/inkling2mini"}
+              ]
+            },
+            {
+              "text": "OpenAI показала, что модели GPT-6 умеют проектировать белки: структуры и последовательности строятся через рассуждения и код, а лабораторные тесты нашли признаки связывания с пятью мишенями.",
+              "links": [{"title": "OpenAI", "url": "https://openai.com/index/gpt-6-models-demonstrate-intrinsic-protein-design-capabilities"}]
+            },
+            {
+              "text": "Лимиты ChatGPT ужесточаются: OpenAI объединяет Chat и Work с общим счётчиком использования, и активные пользователи будут упираться в лимит раньше. По сообщению сотрудника OpenAI, лимиты GPT-6.2 Astra теперь расходуются на 40% быстрее, Sol — на 25%.",
+              "links": [
+                {"title": "TechCrunch", "url": "https://techcrunch.com/2026/11/25/openai-says-heavy-chatgpt-users-may-hit-limits-sooner-as-it-merges-chat-and-work/"},
+                {"title": "Пост в X", "url": "https://twitter.com/thsottiaux/status/2125784147889393806"}
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Инструменты",
+          "points": [
+            {
+              "text": "Anthropic запустила Claude Ship: ИИ-агенты сами проверяют пул-реквесты в GitHub, исправляют замечания и одобряют рутинные изменения кода.",
+              "links": [
+                {"title": "TechCrunch", "url": "https://techcrunch.com/2026/11/23/anthropic-launches-claude-ship-letting-ai-agents-review-fix-and-approve-code-changes/"},
+                {"title": "Хабр", "url": "https://habr.com/ru/companies/selectel/articles/1111792/"}
+              ]
+            },
+            {
+              "text": "OpenAI и Cisco выпустили Shirudo — открытую среду для Linux, которая ставит временную защиту от эксплуатации уязвимостей, пока команда раскатывает патчи.",
+              "links": [
+                {"title": "OpenAI", "url": "https://openai.com/index/introducing-shirudo"},
+                {"title": "BleepingComputer", "url": "https://www.bleepingcomputer.com/news/security/new-shirudo-tool-uses-ai-to-shield-unpatched-linux-systems-from-exploits/"}
+              ]
+            },
+            {
+              "text": "Claude Code (версии 2.1.329–2.1.332): навыки из MCP-серверов (бета), Code Mode в Bedrock, Google Cloud и Microsoft Foundry, вход в организации из Enterprise Admin Console, предупреждение о том, где объявлены хуки папки.",
+              "links": [{"title": "Релизы", "url": "https://github.com/anthropics/claude-code/releases"}]
+            },
+            {
+              "text": "Hugging Face представила harness adapters — способ подстроить модель под конкретную агентную обвязку (harness), чтобы улучшить качество и снизить стоимость. В Gemini API появился Tool Retrieval — подбор нужных инструментов из большого набора.",
+              "links": [
+                {"title": "Hugging Face", "url": "https://huggingface.co/blog/harness-adapters-at-scale"},
+                {"title": "Google", "url": "https://blog.google/innovation-and-ai/technology/developers-tools/gemini-api-tool-retrieval/"}
+              ]
+            },
+            {
+              "text": "Вышел PostgreSQL 19 — на два месяца позже обычного сентябрьского релиза.",
+              "links": [{"title": "Simon Willison", "url": "https://simonwillison.net/2026/Nov/19/postgresql-19/"}]
+            }
+          ]
+        },
+        {
+          "title": "Безопасность",
+          "points": [
+            {
+              "text": "1Password взломали через аккаунт в GitHub: украдены данные клиентов и исходный код. Самая обсуждаемая новость недели на Hacker News (1450+ очков).",
+              "links": [
+                {"title": "The Hacker News", "url": "https://thehackernews.com/2026/11/1password-hacked-customer-data-and.html"},
+                {"title": "1Password", "url": "https://1password.com/blog/update-on-nov-2026-security-incident"}
+              ]
+            },
+            {
+              "text": "Неизвестная группировка взломала 24 сервера управления Check Point — предположительно с помощью наступательных ИИ-инструментов. Amazon сообщает о похожем: ИИ-агенты атакующих нашли и использовали уязвимость нулевого дня почти без участия человека.",
+              "links": [
+                {"title": "The Hacker News", "url": "https://thehackernews.com/2026/11/hackers-compromise-24-check-point.html"},
+                {"title": "Ars Technica: Amazon", "url": "https://arstechnica.com/security/2026/11/amazon-says-hackers-ai-agents-found-and-exploited-0-day-with-little-human-input/"}
+              ]
+            },
+            {
+              "text": "OpenRouter отключил трёх провайдеров моделей: они нарушали заявленные правила обработки данных и раскрывали промпты и секреты пользователей.",
+              "links": [{"title": "BleepingComputer", "url": "https://www.bleepingcomputer.com/news/security/openrouter-drops-ai-providers-over-leaked-prompts-and-secrets/"}]
+            },
+            {
+              "text": "Стоит проверить обновления: активно эксплуатируются критические уязвимости в Drupal (две подряд), VMware vCenter (9.8 по CVSS), PAN-OS и GeoServer. Взломан реестр пакетов Hex.pm (Elixir/Erlang).",
+              "links": [
+                {"title": "Drupal", "url": "https://thehackernews.com/2026/11/drupal-warns-of-new-highly-critical.html"},
+                {"title": "vCenter", "url": "https://thehackernews.com/2026/11/vmware-vcenter-hit-by-another-critical.html"},
+                {"title": "PAN-OS", "url": "https://www.bleepingcomputer.com/news/security/palo-alto-networks-warns-of-fragnesia-flaw-exploited-in-pan-os-attacks/"},
+                {"title": "Hex.pm", "url": "https://thehackernews.com/2026/11/hackers-exploited-cvss-100-hexpm-rce.html"}
+              ]
+            },
+            {
+              "text": "Атаки через зависимости: 13 вредоносных NuGet-пакетов под видом тестовых заданий для .NET-разработчиков и бэкдор в шести плагинах WP Connect для WordPress (их удалили до выхода вредоносных версий).",
+              "links": [
+                {"title": "NuGet", "url": "https://thehackernews.com/2026/11/13-malicious-nuget-packages-turn-fake.html"},
+                {"title": "WordPress", "url": "https://thehackernews.com/2026/11/wordpress-blocks-six-backdoored-wp.html"}
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Наука и обсуждения",
+          "points": [
+            {
+              "text": "Математика с ИИ — главная тема обсуждений на Hacker News: препринт OpenAI о том, что показатель степени матричного умножения равен 9/4, пост Скотта Ааронсона о «масштабе происходящего», статьи Google Cogentic о факторизации и дискретном логарифме и более короткая проверка обобщённой гипотезы Римана в Lean от Anthropic. Слухи о том, что лаборатории «взломали» факторизацию, пока остаются слухами.",
+              "links": [
+                {"title": "Препринт OpenAI", "url": "https://github.com/openai/math/blob/main/preprints/The-matrix-multiplication-exponent-is-nine-fourths-November-24-2026/paper.pdf"},
+                {"title": "Скотт Ааронсон", "url": "https://scottaaronson.blog/?p=10379"},
+                {"title": "Google Cogentic", "url": "https://github.com/google-research/google-research/tree/master/cogentic_research_papers"}
+              ]
+            },
+            {
+              "text": "DeepMind ускоряет квантовые алгоритмы для задач синтеза и химии с помощью команд агентов и формальной верификации.",
+              "links": [{"title": "DeepMind", "url": "https://deepmind.google/blog/finding-faster-quantum-algorithms-with-agents-and-formal-verification/"}]
+            }
+          ]
+        },
+        {
+          "title": "Индустрия",
+          "points": [
+            {
+              "text": "Anthropic закрыла IPO. Дженсен Хуанг вернулся на пост CEO Nvidia. FCC разрешила SpaceX вывести на орбиту до миллиона спутников-датацентров с ИИ-чипами.",
+              "links": [
+                {"title": "Anthropic", "url": "https://www.anthropic.com/news/ipo-close"},
+                {"title": "The Verge: Nvidia", "url": "https://www.theverge.com/ai-artificial-intelligence/1030422/nvidia-jensen-huang-ai-china-alice-huang"},
+                {"title": "The Verge: SpaceX", "url": "https://www.theverge.com/science/1042278/spacex-fcc-starmind-ai-space-data-centers"}
+              ]
+            },
+            {
+              "text": "42 генпрокурора штатов США пытаются запретить обанкротившейся Character.AI продавать переписки пользователей. Amazon обсуждает с Meta, чтобы пустить ИИ-агента Muse делать покупки на своём маркетплейсе.",
+              "links": [
+                {"title": "The Verge: Character.AI", "url": "https://www.theverge.com/policy/1042620/character-ai-sale-state-ags-block-selling-users-chats"},
+                {"title": "The Verge: Muse", "url": "https://www.theverge.com/tech/1042071/meta-amazon-muse-ai-shopping-discussions"}
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Почитать на русском",
+          "points": [
+            {
+              "text": "Почему одинаковые вопросы к LLM дают разные ответы и как с этим жить; домашняя LLM на llama.cpp с RPC в Windows 11; как перестроить IT-образование в эпоху ИИ-агентов.",
+              "links": [
+                {"title": "Разные ответы LLM", "url": "https://habr.com/ru/companies/timeweb/articles/1101040/"},
+                {"title": "llama.cpp с RPC", "url": "https://habr.com/ru/companies/yadro/articles/1111718/"},
+                {"title": "IT-образование", "url": "https://habr.com/ru/articles/1112288/"}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
