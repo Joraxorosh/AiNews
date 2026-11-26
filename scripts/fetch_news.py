@@ -366,7 +366,7 @@ def fetch_source(src: dict) -> tuple[dict, list[dict]]:
 TOPIC_FILTERS = {
     "ai": re.compile(
         r"(?<!\w)(ии|ai|нейросет\w*|нейронк\w*|llm\w*|gpt\w*|chatgpt|claude|gemini|gemma|gigachat|yandexgpt|alice ai|"
-        r"deepseek|qwen|llama|mistral|grok|copilot|cursor|codex|openai|anthropic|модел\w*|агент\w*|"
+        r"deepseek|qwen|llama|mistral|grok|kandinsky|(?:opus|sonnet|haiku|fable|mythos) \d[\w.]*|copilot|cursor|codex|openai|anthropic|модел\w*|агент\w*|"
         r"машинн\w* обучен\w*|ml|deep learning|промпт\w*|prompt\w*|rag|эмбеддинг\w*|трансформер\w*|"
         r"инференс\w*|токен\w*|вайб\w*|генеративн\w*|чат-?бот\w*|ollama|mcp|fine-?tun\w*|дообучен\w*)(?!\w)", re.I),
 }
@@ -376,7 +376,7 @@ TOPIC_FILTERS = {
 # Hacker News, Ars, «Хабр — лучшее» пишут обо всём; раскладываем по тексту, иначе — категория источника.
 MODEL_RE = re.compile(
     r"(?<!\w)(gpt-?\d[\w.-]*|chatgpt|claude|gemini|gemma|llama|qwen|deepseek|mistral|grok|gigachat|yandexgpt|alice ai|"
-    r"kimi|glm-?\d[\w.]*|nemotron|muse spark|openai|anthropic|deepmind|llm\w*|нейросет\w*|языков\w* модел\w*|"
+    r"kimi|glm-?\d[\w.]*|nemotron|muse spark|(?:opus|sonnet|haiku|fable|mythos) \d[\w.]*|kandinsky|openai|anthropic|deepmind|llm\w*|нейросет\w*|языков\w* модел\w*|"
     r"language models?|frontier model\w*|open[- ]weights?|reasoning model\w*)(?!\w)", re.I)
 AI_TOOL_RE = re.compile(
     r"(?<!\w)(claude code|copilot|cursor|codex|cline|aider|windsurf|antigravity|ollama|vllm|llama\.cpp|lm studio|"
@@ -400,6 +400,7 @@ HN_META_RE = re.compile(r"(?:Article URL:\s*\S+\s*)?Comments URL:\s*(?P<url>\S+)
 SUMMARY_JUNK = [
     re.compile(r"^arXiv:\S+\s+Announce Type:\s*\S+\s+Abstract:\s*", re.I),   # arXiv
     re.compile(r"\s*Читать далее\s*…?$"),                                     # Хабр
+    re.compile(r"\s*(?:—\s*)?Читать дальше\s*«.*$", re.S),                    # Tproger (хвост бывает обрезан)
     re.compile(r"^What's changed\s*", re.I),                                   # релизы GitHub
 ]
 
@@ -478,7 +479,9 @@ def main() -> int:
             it["tags"].insert(0, "релиз")
         it["category"] = auto_category(it, src["category"]) if src.get("auto_category") else src["category"]
         rx = TOPIC_FILTERS.get(src.get("require", ""))
-        if rx and not rx.search(f"{it['title']} {it['summary']}"):
+        # require_title: тему проверяем только по заголовку — у новостных сайтов ИИ часто мелькает в описании мимоходом
+        hay = it["title"] if src.get("require_title") else f"{it['title']} {it['summary']}"
+        if rx and not rx.search(hay):
             continue
         dated_items.append((pub, it))
 

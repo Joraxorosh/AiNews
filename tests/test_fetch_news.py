@@ -105,6 +105,11 @@ class Tidy(unittest.TestCase):
         self.assertEqual(a["summary"], "Интересный текст.")
         self.assertEqual(b["summary"], "Added X")
 
+    def test_tproger_read_more(self):
+        it = {"source": "tproger", "title": "T", "summary": "Текст статьи. — Читать дальше « T »"}
+        f.tidy(it)
+        self.assertEqual(it["summary"], "Текст статьи.")
+
     def test_url_only_or_title_repeat_removed(self):
         a = item("1", "T", "gh-vscode", summary="https://code.visualstudio.com/updates/v1_148")
         b = item("2", "Same", "x", summary="Same")
@@ -168,6 +173,8 @@ class Topics(unittest.TestCase):
             ({"title": "Claude Code adds skills", "summary": "", "tags": []}, "tools"),
             ({"title": "GPT-6.2 Astra beats records", "summary": "", "tags": []}, "models"),
             ({"title": "A few questions about a pond", "summary": "", "tags": []}, "it"),
+            ({"title": "Прогон Fable 5.2 в Terminal-Bench", "summary": "", "tags": []}, "models"),
+            ({"title": "Сбер представил Kandinsky 6.5", "summary": "", "tags": []}, "models"),
         ]
         for it, want in cases:
             self.assertEqual(f.auto_category(it, "it"), want, it["title"])
@@ -210,6 +217,8 @@ class SourcesConfig(unittest.TestCase):
             self.assertTrue(s["url"].startswith("https://"), s["id"])
             if "require" in s:
                 self.assertIn(s["require"], f.TOPIC_FILTERS, s["id"])
+            if s.get("require_title"):
+                self.assertIn("require", s, s["id"])
 
 
 if __name__ == "__main__":
